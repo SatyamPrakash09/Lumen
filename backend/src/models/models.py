@@ -2,7 +2,6 @@ from datetime import datetime, UTC
 import uuid
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
-from fastapi import HTTPException
 from sqlalchemy import (
     Uuid,
     Column,
@@ -11,7 +10,6 @@ from sqlalchemy import (
     DateTime,
     Text,
     ForeignKey,
-    Uuid
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -97,6 +95,20 @@ class ChatSession(Base):
         nullable=False
     )
 
+    title = Column(
+        String,
+        nullable=True,
+        default="New Chat"
+    )
+
+    # embedding_status tracks if ALL session documents are embedded:
+    # pending | processing | ready | failed
+    embedding_status = Column(
+        String,
+        nullable=False,
+        default="pending"
+    )
+
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC)
@@ -113,6 +125,13 @@ class ChatSession(Base):
         "Messages",
         back_populates="chat_session",
         cascade="all, delete-orphan"
+    )
+
+    session_documents = relationship(
+        "Documents",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        foreign_keys="Documents.session_id"
     )
 
 
@@ -169,7 +188,7 @@ class Messages(Base):
 class Documents(Base):
     __tablename__ = "documents"
 
-    id = Column( 
+    id = Column(
         Uuid,
         primary_key=True,
         index=True,
@@ -183,6 +202,17 @@ class Documents(Base):
             ondelete="CASCADE"
         ),
         nullable=False
+    )
+
+    # Optional: link to a specific chat session
+    session_id = Column(
+        String,
+        ForeignKey(
+            "chat_sessions.session_id",
+            ondelete="CASCADE"
+        ),
+        nullable=True,
+        index=True
     )
 
     file_name = Column(
@@ -199,6 +229,7 @@ class Documents(Base):
 
     file_size = Column(Integer)
 
+    # pending | processing | ready | failed
     status = Column(
         String,
         default="pending"
@@ -219,4 +250,10 @@ class Documents(Base):
     user = relationship(
         "User",
         back_populates="documents"
+    )
+
+    session = relationship(
+        "ChatSession",
+        back_populates="session_documents",
+        foreign_keys=[session_id]
     )
