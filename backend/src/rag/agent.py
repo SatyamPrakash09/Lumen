@@ -56,6 +56,8 @@ Combine both sources into a clear, markdown-formatted answer that:
 | `wikipedia_search`     | Encyclopedic definitions, history, or background needed   |
 | `calculator`           | Any math / numeric computation required                   |
 | `get_current_datetime` | User asks about today's date or current time              |
+| `search_papers`        | User wants to search for academic papers                  |
+| `weather_search`       | User wants to know the current weather in a city          |
 """
 
 

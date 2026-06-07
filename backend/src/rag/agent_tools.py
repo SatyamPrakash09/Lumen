@@ -217,6 +217,73 @@ def make_summarize_tool(session_id: str):
 
     return summarize_documents
 
+# semantic scholar tool
+@tool
+def search_papers(query: str) -> str:
+    """Search Semantic Scholar for research papers related to a topic."""
+    
+    print("\nCalling search_papers tool")
+    print(f"Searching papers for: {query}\n")
+
+    url = "https://api.semanticscholar.org/graph/v1/paper/search"
+
+    params = {
+        "query": query,
+        "limit": 5,
+        "fields": "title,authors,year,abstract,url"
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    papers = data.get("data", [])
+
+    results = []
+
+    for paper in papers:
+        authors = ", ".join([a["name"] for a in paper.get("authors", [])])
+
+        results.append(
+            f"Title: {paper.get('title','')}\n"
+            f"Authors: {authors}\n"
+            f"Year: {paper.get('year','')}\n"
+            f"Abstract: {paper.get('abstract','')}\n"
+            f"URL: {paper.get('url','')}\n"
+        )
+
+    return "\n\n".join(results)
+
+@tool
+def weather_search(city: str) -> str:
+    """Get current weather for a city."""
+
+    print("\nCalling weather_search tool")
+
+    api_key = os.getenv("WEATHER_API_KEY")
+
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        return f"Weather API error: {response.status_code}"
+
+    data = response.json()
+
+    # check if API returned an error
+    if "weather" not in data:
+        return f"Weather data not available. API response: {data}"
+
+    weather = data["weather"][0]["description"]
+    temp = data["main"]["temp"]
+    humidity = data["main"]["humidity"]
+
+    return f"""
+City: {city}
+Temperature: {temp} °C
+Weather: {weather}
+Humidity: {humidity} %
+"""
 
 def get_all_tools(session_id: str) -> list:
     return [
@@ -226,4 +293,6 @@ def get_all_tools(session_id: str) -> list:
         calculator,
         get_current_datetime,
         make_summarize_tool(session_id),
+        search_papers,
+        weather_search,
     ]
