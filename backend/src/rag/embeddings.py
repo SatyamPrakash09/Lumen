@@ -1,14 +1,17 @@
 from functools import lru_cache
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenAIEmbeddings
 from src.config.settings import get_settings
 
 settings = get_settings()
 
 
 @lru_cache(maxsize=4)
-def _get_embedding_model(model_name: str) -> HuggingFaceEmbeddings:
+def _get_embedding_model(model_name: str) -> GoogleGenAIEmbeddings:
     """Cache the embedding model so it is only loaded once per process."""
-    return HuggingFaceEmbeddings(model_name=model_name)
+    return GoogleGenAIEmbeddings(
+        model=model_name,
+        google_api_key=settings.GOOGLE_API_KEY
+    )
 
 
 class Embeddings:
