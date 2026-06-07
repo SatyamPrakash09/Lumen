@@ -90,6 +90,23 @@ _WIKI_PATTERN = re.compile(
 )
 
 
+def _to_string(content) -> str:
+    """Normalize LangChain message content (string or list of parts) to a flat string."""
+    if not content:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict) and "text" in part:
+                parts.append(part["text"])
+            elif isinstance(part, str):
+                parts.append(part)
+        return "".join(parts)
+    return str(content)
+
+
 def _parse_citations(tool_name: str, content: str) -> list[dict]:
     citations: list[dict] = []
 
@@ -180,7 +197,7 @@ async def run_agent(
         msg_type = type(msg).__name__
 
         if msg_type == "AIMessage" and msg.content:
-            answer = msg.content
+            answer = _to_string(msg.content)
 
         if hasattr(msg, "tool_calls") and msg.tool_calls:
             for tc in msg.tool_calls:
@@ -189,7 +206,7 @@ async def run_agent(
                     tools_used.append(name)
 
         if msg_type == "ToolMessage":
-            all_citations.extend(_parse_citations(getattr(msg, "name", ""), msg.content or ""))
+            all_citations.extend(_parse_citations(getattr(msg, "name", ""), _to_string(msg.content)))
 
     citations = _deduplicate_citations(all_citations)
 
@@ -249,12 +266,12 @@ async def run_agent_stream(
 
         if kind == "on_chat_model_stream":
             chunk = event["data"]["chunk"]
-            token = chunk.content
-            if token:
-                answer += token
+            token_str = _to_string(chunk.content)
+            if token_str:
+                answer += token_str
                 yield {
                     "type": "token",
-                    "content": token
+                    "content": token_str
                 }
         elif kind == "on_tool_start":
             yield {
