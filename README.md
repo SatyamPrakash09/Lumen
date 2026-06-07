@@ -1,3 +1,6 @@
+![Lumen](frontend/public/banner.png)
+
+---
 # Lumen AI — Premium RAG Engine & Chat Interface
 
 Lumen AI is a premium, self-hosted Retrieval-Augmented Generation (RAG) document analysis engine and chat application. It combines a robust **FastAPI backend** running a **LangGraph ReAct agent** (with local document retrieval and live DuckDuckGo web verification) and a modern **React + Vite frontend** overhauled with a minimalist ChatGPT-like dark theme.
