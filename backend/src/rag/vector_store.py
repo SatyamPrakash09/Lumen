@@ -6,7 +6,7 @@ from typing import Optional
 import chromadb
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from src.config.settings import get_settings
 
@@ -28,8 +28,11 @@ def _get_chroma_client() -> chromadb.PersistentClient:
 
 
 @lru_cache(maxsize=4)
-def _get_embedding_fn(model_name: str) -> HuggingFaceEmbeddings:
-    return HuggingFaceEmbeddings(model_name=model_name)
+def _get_embedding_fn(model_name: str) -> GoogleGenerativeAIEmbeddings:
+    return GoogleGenerativeAIEmbeddings(
+        model=model_name,
+        google_api_key=settings.GOOGLE_API_KEY
+    )
 
 
 def _collection_name(session_id: str) -> str:
