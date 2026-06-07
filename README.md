@@ -31,25 +31,25 @@ graph TD
         Web["DuckDuckGo API (Web Verification)"]
     end
 
-    UI -->|Interact / Ask Questions| API_Client
-    DD_Overlay -->|Drag Files| API_Client
+    UI -->|"Interact / Ask Questions"| API_Client
+    DD_Overlay -->|"Drag Files"| API_Client
     
-    API_Client -->|POST /auth/refresh| Auth_Router
-    API_Client -->|POST /sessions/{id}/agent/stream| Session_Router
-    API_Client -->|POST /sessions/{id}/documents| Session_Router
+    API_Client -->|"POST /auth/refresh"| Auth_Router
+    API_Client -->|"POST /sessions/{id}/agent/stream"| Session_Router
+    API_Client -->|"POST /sessions/{id}/documents"| Session_Router
     
     Session_Router --> Session_Ctrl
-    Session_Ctrl -->|1. Pre-validate & Save Files| Pipeline
-    Session_Ctrl -->|Read / Write Metadata| DB
+    Session_Ctrl -->|"1. Pre-validate & Save Files"| Pipeline
+    Session_Ctrl -->|"Read / Write Metadata"| DB
     
-    Pipeline -->|2. Chunk & Embed Document| Chroma
-    Pipeline -->|SentenceTransformers Embed| Ollama
+    Pipeline -->|"2. Chunk & Embed Document"| Chroma
+    Pipeline -->|"SentenceTransformers Embed"| Ollama
     
-    Session_Router -->|Run Agent Query| Agent
-    Agent -->|1. Retrieve Local Chunks| Chroma
-    Agent -->|2. Cross-check Claims| Web
-    Agent -->|Generate synthesizing stream| Ollama
-    Agent -->|Stream tokens (NDJSON)| API_Client
+    Session_Router -->|"Run Agent Query"| Agent
+    Agent -->|"1. Retrieve Local Chunks"| Chroma
+    Agent -->|"2. Cross-check Claims"| Web
+    Agent -->|"Generate synthesizing stream"| Ollama
+    Agent -->|"Stream tokens (NDJSON)"| API_Client
 ```
 
 ---
