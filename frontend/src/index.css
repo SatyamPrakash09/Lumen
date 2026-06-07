@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@theme {
+  /* ChatGPT-inspired deep dark theme */
+  --color-background: #0d0d0d;
+  --color-surface: #171717;
+  --color-surface-dim: #09090b;
+  --color-surface-bright: #2f2f2f;
+  --color-surface-container-lowest: #030303;
+  --color-surface-container-low: #0f0f0f;
+  --color-surface-container: #171717;
+  --color-surface-container-high: #212121;
+  --color-surface-container-highest: #2f2f2f;
+
+  --color-on-background: #ececec;
+  --color-on-surface: #f9f9f9;
+  --color-on-surface-variant: #b4b4b4;
+
+  --color-primary: #10a37f; /* ChatGPT Emerald */
+  --color-primary-container: #212121;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ececec;
+
+  --color-secondary: #10a37f;
+  --color-secondary-container: #2f2f2f;
+  --color-on-secondary: #ffffff;
+
+  --color-outline: #2f2f2f;
+  --color-outline-variant: #212121;
+
+  --color-error: #ef4444;
+
+  --width-sidebar-width: 260px;
+  --padding-margin-desktop: 24px;
+}
+
+@keyframes pulse-emerald {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+}
+
+.animate-pulse-emerald {
+  animation: pulse-emerald 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2f2f2f;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #383838;
+}
+
+.glass-panel {
+  background: #171717;
+  border-right: 1px solid #2f2f2f;
+}
+
+/* Base resets to fit modern aesthetic */
+body {
+  background-color: #0d0d0d;
+  color: #ececec;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Markdown Content Styling */
+.markdown-content p {
+  margin-bottom: 0.75rem;
+}
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+.markdown-content strong, .markdown-content b {
+  font-weight: 600;
+  color: #ffffff;
+}
+.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4 {
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-content h1 { font-size: 1.25rem; }
+.markdown-content h2 { font-size: 1.15rem; }
+.markdown-content h3 { font-size: 1.05rem; }
+.markdown-content ul, .markdown-content ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+  list-style-type: disc;
+}
+.markdown-content ol {
+  list-style-type: decimal;
+}
+.markdown-content li {
+  margin-bottom: 0.25rem;
+}
+.markdown-content code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  background-color: #27272a;
+  color: #f4f4f5;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+.markdown-content pre {
+  background-color: #050505;
+  border: 1px solid #27272a;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85rem;
+  color: #e4e4e7;
+  display: block;
+}
+.markdown-content blockquote {
+  border-left: 3px solid #10a37f;
+  padding-left: 0.75rem;
+  color: #a1a1aa;
+  font-style: italic;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
