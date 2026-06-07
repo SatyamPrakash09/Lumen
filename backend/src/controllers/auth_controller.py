@@ -118,7 +118,7 @@ async def login_user(data, db, response):
         value=access_token,
         secure=settings.PRODUCTION,
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.PRODUCTION else "lax",
         max_age=settings.ACCESS_TOKEN_EXPIRY * 60,
         expires=settings.ACCESS_TOKEN_EXPIRY * 60,
         path="/"
@@ -130,7 +130,7 @@ async def login_user(data, db, response):
         value=refresh_token,
         secure=settings.PRODUCTION,
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.PRODUCTION else "lax",
         max_age=settings.REFRESH_TOKEN_EXPIRY * 24 * 60 * 60,
         expires=settings.REFRESH_TOKEN_EXPIRY * 24 * 60 * 60,
         path="/"
@@ -140,8 +140,18 @@ async def login_user(data, db, response):
 
 
 async def logout_user(response):
-    response.delete_cookie(key="access_token", path="/")
-    response.delete_cookie(key="refresh_token", path="/")
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        secure=settings.PRODUCTION,
+        samesite="none" if settings.PRODUCTION else "lax"
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+        secure=settings.PRODUCTION,
+        samesite="none" if settings.PRODUCTION else "lax"
+    )
     return {"message": "Logged out successfully"}
 
 async def current_user(
@@ -240,7 +250,7 @@ async def refresh_token_user(
         value=new_access_token,
         secure=settings.PRODUCTION,
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.PRODUCTION else "lax",
         max_age=settings.ACCESS_TOKEN_EXPIRY * 60,
         expires=settings.ACCESS_TOKEN_EXPIRY * 60,
         path="/"
@@ -251,7 +261,7 @@ async def refresh_token_user(
         value=new_refresh_token,
         secure=settings.PRODUCTION,
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.PRODUCTION else "lax",
         max_age=settings.REFRESH_TOKEN_EXPIRY * 24 * 60 * 60,
         expires=settings.REFRESH_TOKEN_EXPIRY * 24 * 60 * 60,
         path="/"
