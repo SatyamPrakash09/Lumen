@@ -1,4 +1,8 @@
-const BASE_URL = import.meta.env.VITE_API;
+const BASE_URL = import.meta.env.VITE_API || (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000/api/v1'
+    : 'https://lumen-ri0b.onrender.com/api/v1'
+);
 
 let isRefreshing = false;
 let refreshSubscribers = [];
