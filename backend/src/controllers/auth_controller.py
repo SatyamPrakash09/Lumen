@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_async_session
-from src.models.user_model import User
+from src.models.models import User
 from sqlalchemy import select, or_, func
 from src.utils.jwt_utils import create_refresh_token, create_access_token
 from pwdlib import PasswordHash
@@ -152,7 +152,7 @@ async def current_user(
     if not token:
         raise HTTPException(
             status_code=401,
-            detail="Not authenticated"
+            detail="User Not authenticated"
         )
 
     try:

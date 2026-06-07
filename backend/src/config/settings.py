@@ -9,6 +9,16 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRY: int = 15
     REFRESH_TOKEN_SECRET: str = "Your Secret"
     PRODUCTION:bool=False
+    UPLOAD_DIR: str = "./uploads"
+    ALLOWED_EXTENSIONS: list = ["pdf", "docx", "txt"]
+    UPLOAD_MAX_SIZE: int = 20 * 1024 * 1024  # 20 MB
+    ALLOWED_MIME_TYPES: dict = {
+        ".pdf": ["application/pdf"],
+        ".docx": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+        ".txt": ["text/plain"],
+        ".md": ["text/markdown"],
+        ".csv": ["text/csv"]
+    }
     
 
     class Config:

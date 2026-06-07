@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, APIRouter
 
+ 
 from src.database.db import create_db_and_tables
-from src.routes import auth_routes
+from src.routes import auth_routes, documents_routes
 
 
 @asynccontextmanager
@@ -19,6 +20,11 @@ api_router.include_router(
     auth_routes.router,
     prefix="/auth",
     tags=["auth"]
+)
+api_router.include_router(
+    documents_routes.router,
+    prefix="/documents",
+    tags=["documents"]
 )
 
 @api_router.get("/")

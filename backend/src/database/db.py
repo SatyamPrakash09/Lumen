@@ -3,9 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from fastapi import Depends
 from collections.abc import AsyncGenerator
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
-from src.models.user_model import User
+from src.models.models import User, Base
 from src.config.settings import get_settings
-from src.models.user_model import Base
 
 settings = get_settings()
 

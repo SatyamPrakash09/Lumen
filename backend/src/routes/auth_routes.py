@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.user_model import User
+from src.models.models import User
 from src.database.db import get_async_session
 from src.schemas.schema import RegistrationSchema, UserResponseSchema, LoginSchema
 from src.controllers.auth_controller import register_user, login_user, logout_user, current_user
@@ -18,7 +18,7 @@ def auth():
 @router.post("/register", response_model=UserResponseSchema)
 async def register(
     data: RegistrationSchema,
-    db: Annotated[AsyncSession, Depends(get_async_session)]
+    db: AsyncSession = Depends(get_async_session)
 ) -> UserResponseSchema:
     return await register_user(data, db)
 
