@@ -22,4 +22,11 @@ dependencies = [
     "python-magic>=0.4.27",
     "pypdf2>=3.0.1",
     "docx>=0.2.4",
+    "langchain-text-splitters>=1.1.2",
+    "langchain-huggingface>=1.2.2",
+    "duckduckgo-search>=8.1.1",
+    "wikipedia-api>=0.15.0",
+    "pypdf>=6.13.0",
+    "sentence-transformers>=5.5.1",
+    "ddgs>=9.14.4",
 ]

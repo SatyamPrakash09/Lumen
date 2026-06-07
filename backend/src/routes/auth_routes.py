@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.models import User
 from src.database.db import get_async_session
 from src.schemas.schema import RegistrationSchema, UserResponseSchema, LoginSchema
-from src.controllers.auth_controller import register_user, login_user, logout_user, current_user
+from src.controllers.auth_controller import register_user, login_user, logout_user, current_user, refresh_token_user
 
 router = APIRouter()
 
@@ -39,3 +39,13 @@ async def get_current_user(
     user  = Depends(current_user)
 ) -> UserResponseSchema:
     return  user
+
+
+@router.post("/refresh", response_model=UserResponseSchema)
+async def refresh(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_async_session)
+) -> UserResponseSchema:
+    return await refresh_token_user(request, response, db)
+

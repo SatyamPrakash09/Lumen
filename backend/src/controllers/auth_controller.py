@@ -12,6 +12,7 @@ from src.utils.jwt_utils import create_refresh_token, create_access_token
 from pwdlib import PasswordHash
 from src.config.settings import get_settings
 import jwt
+from jwt import PyJWTError
 
 settings = get_settings()
 
@@ -181,5 +182,82 @@ async def current_user(
         )
 
     return user
+
+
+async def refresh_token_user(
+    request: Request,
+    response: Response,
+    db: AsyncSession,
+) -> User:
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh token missing"
+        )
+
+    try:
+        payload = jwt.decode(
+            refresh_token,
+            settings.REFRESH_TOKEN_SECRET,
+            algorithms=["HS256"]
+        )
+        user_id = payload.get("sub")
+    except PyJWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid refresh token"
+        )
+
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user or user.refresh_token != refresh_token:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found or refresh token mismatch"
+        )
+
+    # Generate new tokens
+    token_payload = {
+        "sub": str(user.id),
+        "niat_id": user.niat_id,
+        "email": user.email
+    }
+    new_access_token = create_access_token(token_payload)
+    new_refresh_token = create_refresh_token(token_payload)
+
+    user.access_token = new_access_token
+    user.refresh_token = new_refresh_token
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    # Set new cookies
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        secure=settings.PRODUCTION,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRY * 60,
+        expires=settings.ACCESS_TOKEN_EXPIRY * 60,
+        path="/"
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        secure=settings.PRODUCTION,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRY * 24 * 60 * 60,
+        expires=settings.REFRESH_TOKEN_EXPIRY * 24 * 60 * 60,
+        path="/"
+    )
+
+    return user
+
 
 
