@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class Settings(BaseSettings):
+    ALLOWED_ORIGINS:list 
     is_development: bool = True
     DB_URL: str = 'sqlite+aiosqlite:///db.sqlite3'
     ACCESS_TOKEN_SECRET: str = "Your Secret"
