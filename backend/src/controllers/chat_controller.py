@@ -69,7 +69,7 @@ async def agent_chat(
         logger.error(f"[AgentChat] Error for session {session_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=503,
-            detail=f"Agent error: {str(e)}. Make sure Ollama is running.",
+            detail=f"Agent error: {str(e)}",
         )
 
     # ── 4. Persist messages ────────────────────────────────────────────────
@@ -142,7 +142,7 @@ async def agent_chat_stream(
         logger.error(f"[AgentChatStream] Error streaming response: {e}", exc_info=True)
         yield json.dumps({
             "type": "error",
-            "detail": f"Streaming agent error: {str(e)}. Make sure Ollama is running."
+            "detail": f"Streaming agent error: {str(e)}"
         }) + "\n"
         return
 

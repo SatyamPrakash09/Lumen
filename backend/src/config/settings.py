@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     RAG_TOP_K: int = 5
+    GOOGLE_API_KEY: str = ""
+    GOOGLE_GENAI_MODEL: str = "gemini-2.5-flash"
 
     class Config:
         env_file = ".env"
