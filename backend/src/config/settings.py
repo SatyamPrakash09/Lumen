@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 5
     GOOGLE_API_KEY: str = ""
     GOOGLE_GENAI_MODEL: str = "gemini-2.5-flash"
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
 
     class Config:
         env_file = ".env"
