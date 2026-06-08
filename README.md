@@ -9,7 +9,7 @@ Lumen AI is a premium, self-hosted Retrieval-Augmented Generation (RAG) document
 
 ## Architecture & Data Flow
 
-Below is the architecture diagram showing how the frontend, FastAPI controllers, SQLite metadata DB, ChromaDB vector store, LangGraph agent, Ollama model, and web tools interact:
+Below is the architecture diagram showing how the frontend, FastAPI controllers, Supabase PostgreSQL metadata DB, ChromaDB vector store, LangGraph agent, Ollama model, and web tools interact:
 
 ```mermaid
 graph TD
@@ -28,7 +28,7 @@ graph TD
     end
 
     subgraph Storage [Databases & External APIs]
-        DB[("SQLite DB (Metadata & History)")]
+        DB[("Supabase PostgreSQL DB (Metadata & History)")]
         Chroma[("ChromaDB (Vector Store)")]
         Ollama["Ollama (Llama 3.2 Model)"]
         Web["DuckDuckGo API (Web Verification)"]
@@ -88,7 +88,7 @@ Lumen/
 │   ├── src/
 │   │   ├── config/          # Environment settings
 │   │   ├── controllers/     # Controller business logic
-│   │   ├── database/        # SQLite database connection
+│   │   ├── database/        # Supabase PostgreSQL database connection
 │   │   ├── models/          # SQLAlchemy models
 │   │   ├── rag/             # LangGraph agent, loaders, splitter, vector store
 │   │   ├── routes/          # API Route configurations
@@ -126,6 +126,7 @@ Lumen/
    ACCESS_TOKEN_SECRET="YourSecret"
    REFRESH_TOKEN_SECRET="YourSecret"
    is_development=True
+   DB_URL="postgresql+asyncpg://postgres.[project-ref]:[password]@[region-pooler].supabase.com:6543/postgres?sslmode=require"
    ```
 4. **Install Dependencies & Start Backend:**
    Using `uv`:
