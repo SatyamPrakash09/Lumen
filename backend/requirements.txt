@@ -483,3 +483,5 @@ yarl==1.24.2
     # via aiohttp
 zstandard==0.25.0
     # via langsmith
+
+asyncpg>=0.29.0
