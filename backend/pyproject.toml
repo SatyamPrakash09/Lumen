@@ -27,4 +27,5 @@ dependencies = [
     "ddgs>=9.14.4",
     "langchain-google-genai>=4.2.4",
     "asyncpg>=0.31.0",
+    "slowapi>=0.1.9",
 ]

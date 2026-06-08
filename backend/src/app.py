@@ -1,13 +1,15 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 
 from src.database.db import create_db_and_tables
 from src.routes import auth_routes
 from src.routes import session_routes
 from src.config.settings import get_settings
-
+from slowapi import  _rate_limit_exceeded_handler
+from src.utils.limiter import limiter
+from slowapi.errors import RateLimitExceeded
 settings = get_settings()
 
 
@@ -34,7 +36,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -50,7 +53,8 @@ api_router.include_router(
 )
 
 @api_router.get("/")
-def status():
+
+async def status(request:Request):
     return {"message": "Server is up", "status": "ok"}
 
 app.include_router(api_router)

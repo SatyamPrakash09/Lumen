@@ -1,8 +1,8 @@
 from typing import List
-from fastapi import APIRouter, Body, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Query, UploadFile, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from src.utils.limiter import limiter
 from src.controllers.auth_controller import current_user
 from src.controllers.session_controller import (
     attach_documents_to_session,
@@ -31,7 +31,9 @@ router = APIRouter()
 # ──────────────────────────────────────────────
 
 @router.post("/", response_model=ChatSessionResponseSchema, status_code=201)
+@limiter.limit("10/minute")
 async def create_chat_session(
+    request: Request,
     body: CreateSessionSchema = Body(default=CreateSessionSchema()),
     db: AsyncSession = Depends(get_async_session),
     user=Depends(current_user),
@@ -119,7 +121,9 @@ async def list_session_documents(
     "/{session_id}/agent",
     response_model=AgentResponseSchema,
 )
+@limiter.limit("10/minute")
 async def agent_chat_endpoint(
+    request: Request,
     session_id: str,
     body: ChatRequestSchema,
     db: AsyncSession = Depends(get_async_session),
@@ -159,6 +163,7 @@ async def agent_chat_endpoint(
     "/{session_id}/agent/stream",
 )
 async def agent_chat_stream_endpoint(
+    request: Request,
     session_id: str,
     body: ChatRequestSchema,
     user=Depends(current_user),
