@@ -26,6 +26,9 @@ class LoginSchema(BaseSchema):
 class UpdateUsernameSchema(BaseSchema):
     new_username: str
 
+class UpdateEmailSchema(BaseSchema):
+    new_email: EmailStr
+
 
 class UserResponseSchema(BaseSchema):
     username: str

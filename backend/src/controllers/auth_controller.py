@@ -229,6 +229,42 @@ async def update_username(new_username: str, user: User,  db: AsyncSession):
             status_code=500,
             detail="Internal server error"
         )
+    
+
+async def update_email(new_email: str, user: User,  db: AsyncSession):
+    new_email = new_email.strip()
+    if not new_email:
+        raise HTTPException(status_code=400, detail="New email is required")
+    if new_email == user.email:
+        raise HTTPException(status_code=400, detail="New email cannot be the same as the current email")
+    if new_email.lower() == user.email.lower():
+        raise HTTPException(status_code=400, detail="New email cannot differ only in case from the current email")
+    if len(new_email) < 3 or len(new_email) > 50:
+        raise HTTPException(status_code=400, detail="email must be between 3 and 50 characters")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Inactive users cannot update email")
+    try:
+        stmt = select(User).where(User.email == new_email)
+        result = await db.execute(stmt)
+        existing_user = result.scalars().first()
+        if existing_user:
+            raise HTTPException(status_code=409, detail="email already in use.")
+        user.email = new_email
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    except HTTPException:
+        await db.rollback()
+        raise
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
 
 
 

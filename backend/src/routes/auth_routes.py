@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import User
 from src.database.db import get_async_session
-from src.schemas.schema import RegistrationSchema, UserResponseSchema, LoginSchema, UpdateUsernameSchema
-from src.controllers.auth_controller import register_user, login_user, logout_user, current_user, refresh_token_user, update_username
+from src.schemas.schema import RegistrationSchema, UserResponseSchema, LoginSchema, UpdateUsernameSchema, UpdateEmailSchema
+from src.controllers.auth_controller import register_user, login_user, logout_user, current_user, refresh_token_user, update_username, update_email
 from src.utils.limiter import limiter
 
 router = APIRouter()
@@ -53,6 +53,19 @@ async def update_username_route(
 ) -> UserResponseSchema:
     # Call the controller function to update the username
     updated_user = await update_username(data.new_username, user, db)
+    return updated_user
+
+
+@router.post("/update-email", response_model=UserResponseSchema)
+@limiter.limit("5/minute")
+async def update_email_route(
+    data: UpdateEmailSchema,
+    request: Request,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_async_session)
+) -> UserResponseSchema:
+    # Call the controller function to update the username
+    updated_user = await update_email(data.new_email, user, db)
     return updated_user
 
 
