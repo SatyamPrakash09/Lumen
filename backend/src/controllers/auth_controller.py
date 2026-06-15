@@ -26,21 +26,23 @@ def verify_password(plain_password, hashed_password):
     return password_hash.verify(plain_password, hashed_password)
 
 async def register_user(data, db):
-    if not data.niat_id or not data.password or not data.email:
+    if not data.username or not data.password or not data.email:
         raise HTTPException(status_code=400, detail="Add Credential Not Present")
-    find_user = select(User).where(or_(func.lower(User.niat_id) == data.niat_id.lower(), User.email == data.email))
+    if not data.username.isalnum():
+        raise HTTPException(code=400, detail="username is not alpha numeric")
+    find_user = select(User).where(or_(func.lower(User.username) == data.username.lower(), User.email == data.email))
     result = await db.execute(find_user)
     existing_user = result.scalars().first()
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
 
     try:
-        token_payload_pre = {"niat_id": data.niat_id, "email": data.email}
+        token_payload_pre = {"username": data.username, "email": data.email}
         access_token = create_access_token(token_payload_pre)
         refresh_token = create_refresh_token(token_payload_pre)
 
         user = User(
-            niat_id=data.niat_id,
+            username=data.username,
             email=data.email,
             hashed_password=get_password_hash(data.password),
             avatar=data.avatar,
@@ -56,7 +58,7 @@ async def register_user(data, db):
         # Re-issue tokens now that we have the real user.id
         token_payload = {
             "sub": str(user.id),
-            "niat_id": user.niat_id,
+            "username": user.username,
             "email": user.email
         }
         access_token = create_access_token(token_payload)
@@ -82,14 +84,14 @@ async def login_user(data, db, response):
             detail="Password is required"
         )
 
-    if not data.email and not data.niat_id:
+    if not data.email and not data.username:
         raise HTTPException(
             status_code=400,
-            detail="Provide either email or niat_id"
+            detail="Provide either email or username"
         )
     find_user = select(User).where(
                 or_(
-                    func.lower(User.niat_id) == data.niat_id.lower() if data.niat_id else False,
+                    func.lower(User.username) == data.username.lower() if data.username else False,
                     func.lower(User.email) == data.email.lower() if data.email else False
                 )
             )
@@ -101,7 +103,7 @@ async def login_user(data, db, response):
         raise HTTPException(status_code=400, detail="Password is not valid !")
     token_payload = {
         "sub":str(user.id),
-        "niat_id":user.niat_id,
+        "username":user.username,
         "email": user.email
     }
     access_token = create_access_token(token_payload)
@@ -193,6 +195,42 @@ async def current_user(
 
     return user
 
+async def update_username(new_username: str, user: User,  db: AsyncSession):
+    new_username = new_username.strip()
+    if not new_username:
+        raise HTTPException(status_code=400, detail="New username is required")
+    if new_username == user.username:
+        raise HTTPException(status_code=400, detail="New username cannot be the same as the current username")
+    if new_username.lower() == user.username.lower():
+        raise HTTPException(status_code=400, detail="New username cannot differ only in case from the current username")
+    if len(new_username) < 3 or len(new_username) > 50:
+        raise HTTPException(status_code=400, detail="Username must be between 3 and 50 characters")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Inactive users cannot update username")
+    try:
+        stmt = select(User).where(User.username == new_username)
+        result = await db.execute(stmt)
+        existing_user = result.scalars().first()
+        if existing_user:
+            raise HTTPException(status_code=409, detail="Username already in use.")
+        user.username = new_username
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    except HTTPException:
+        await db.rollback()
+        raise
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
+
+
 
 async def refresh_token_user(
     request: Request,
@@ -232,7 +270,7 @@ async def refresh_token_user(
     # Generate new tokens
     token_payload = {
         "sub": str(user.id),
-        "niat_id": user.niat_id,
+        "username": user.username,
         "email": user.email
     }
     new_access_token = create_access_token(token_payload)

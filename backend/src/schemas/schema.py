@@ -13,18 +13,22 @@ class RegistrationSchema(BaseSchema):
     email: EmailStr
     first_name: str
     last_name: Optional[str] = None
-    niat_id: str
+    username: str
     avatar: Optional[str] = None
 
 
 class LoginSchema(BaseSchema):
-    niat_id: Optional[str] = None
+    username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: str
 
 
+class UpdateUsernameSchema(BaseSchema):
+    new_username: str
+
+
 class UserResponseSchema(BaseSchema):
-    niat_id: str
+    username: str
     email: EmailStr
     first_name: str
     last_name: Optional[str] = None

@@ -25,7 +25,7 @@ class Base(DeclarativeBase):
 class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "users"
 
-    niat_id = Column(
+    username = Column(
         String,
         nullable=False,
         unique=True,
