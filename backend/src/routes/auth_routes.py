@@ -7,6 +7,7 @@ from src.models.models import User
 from src.database.db import get_async_session
 from src.schemas.schema import RegistrationSchema, UserResponseSchema, LoginSchema
 from src.controllers.auth_controller import register_user, login_user, logout_user, current_user, refresh_token_user
+from utils import limiter
 
 router = APIRouter()
 
@@ -23,6 +24,7 @@ async def register(
     return await register_user(data, db)
 
 @router.post("/login", response_model=UserResponseSchema)
+@limiter.limit("5/minute")  
 async def login(
     data: LoginSchema,
     response: Response,
@@ -35,6 +37,7 @@ async def logout(response: Response):
     return await logout_user(response)
 
 @router.get("/me", response_model=UserResponseSchema)
+@limiter.limit("10/minute")
 async def get_current_user(
     user  = Depends(current_user)
 ) -> UserResponseSchema:
@@ -42,6 +45,7 @@ async def get_current_user(
 
 
 @router.post("/refresh", response_model=UserResponseSchema)
+@limiter.limit("5/minute")
 async def refresh(
     request: Request,
     response: Response,
