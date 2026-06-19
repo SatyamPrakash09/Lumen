@@ -1,16 +1,15 @@
 from functools import lru_cache
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import OllamaEmbeddings
 from src.config.settings import get_settings
 
 settings = get_settings()
 
 
 @lru_cache(maxsize=4)
-def _get_embedding_model(model_name: str) -> GoogleGenerativeAIEmbeddings:
+def _get_embedding_model(model_name: str) -> OllamaEmbeddings:
     """Cache the embedding model so it is only loaded once per process."""
-    return GoogleGenerativeAIEmbeddings(
-        model=model_name,
-        google_api_key=settings.GOOGLE_API_KEY
+    return OllamaEmbeddings(
+        model="mxbai-embed-large"
     )
 
 
