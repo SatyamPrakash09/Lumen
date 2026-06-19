@@ -76,7 +76,7 @@ async function request(path, options = {}) {
 
 export const api = {
   // Auth
-  async register({ email, password, firstName, lastName, niatId }) {
+  async register({ email, password, firstName, lastName, username }) {
     return request('/auth/register', {
       method: 'POST',
       body: JSON.stringify({
@@ -84,15 +84,15 @@ export const api = {
         password,
         first_name: firstName,
         last_name: lastName || null,
-        username: niatId,
+        username: username,
       }),
     });
   },
 
-  async login({ email, password, niatId }) {
+  async login({ email, password, username }) {
     const payload = {};
     if (email) payload.email = email;
-    if (niatId) payload.username = niatId;
+    if (username) payload.username = username;
     payload.password = password;
 
     return request('/auth/login', {

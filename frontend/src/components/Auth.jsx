@@ -7,7 +7,7 @@ export default function Auth({ onAuthSuccess }) {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [niatId, setNiatId] = useState('');
+  const [username, setusername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +22,7 @@ export default function Auth({ onAuthSuccess }) {
         if (email.includes('@')) {
           payload.email = email;
         } else {
-          payload.niatId = email;
+          payload.username = email;
         }
         const user = await api.login(payload);
         onAuthSuccess(user);
@@ -32,7 +32,7 @@ export default function Auth({ onAuthSuccess }) {
           password,
           firstName,
           lastName,
-          niatId,
+          username,
         });
         const loggedInUser = await api.login({ email, password });
         onAuthSuccess(loggedInUser);
@@ -94,13 +94,13 @@ export default function Auth({ onAuthSuccess }) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">NIAT ID</label>
+                  <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">Username</label>
                   <input
                     type="text"
                     required
-                    value={niatId}
-                    onChange={(e) => setNiatId(e.target.value)}
-                    placeholder="NIAT001"
+                    value={username}
+                    onChange={(e) => setusername(e.target.value)}
+                    placeholder="Username001"
                     className="w-full bg-zinc-900 border border-zinc-850 focus:border-zinc-750 rounded-xl py-2 px-3 text-sm text-zinc-100 placeholder-zinc-700 outline-none transition-colors"
                   />
                 </div>
@@ -109,14 +109,14 @@ export default function Auth({ onAuthSuccess }) {
 
             <div>
               <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">
-                {isLogin ? 'Email or NIAT ID' : 'Email Address'}
+                {isLogin ? 'Email or Username' : 'Email Address'}
               </label>
               <input
                 type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={isLogin ? "test@lumen.app or NIAT001" : "test@lumen.app"}
+                placeholder={isLogin ? "test@lumen.app or Username001" : "test@lumen.app"}
                 className="w-full bg-zinc-900 border border-zinc-850 focus:border-zinc-750 rounded-xl py-2 px-3 text-sm text-zinc-100 placeholder-zinc-700 outline-none transition-colors"
               />
             </div>
