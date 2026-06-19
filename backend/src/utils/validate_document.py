@@ -33,17 +33,33 @@ async def validate_upload(file: UploadFile):
         try:
             if ext == ".pdf":
                 from PyPDF2 import PdfReader
+
                 with open(temp_path, "rb") as f:
-                    PdfReader(f)
-            elif ext in [".docx"]:
+                    reader = PdfReader(f)
+
+                    if len(reader.pages) == 0:
+                        raise ValueError("PDF contains no pages")
+
+                    # Force parsing first page
+                    reader.pages[0].extract_text()
+
+            elif ext == ".docx":
                 from docx import Document
-                Document(temp_path)
+
+                doc = Document(temp_path)
+
+                if len(doc.paragraphs) == 0:
+                    raise ValueError("DOCX appears to be empty")
+
             elif ext in [".txt", ".md", ".csv"]:
                 with open(temp_path, "r", encoding="utf-8") as f:
-                    f.read(1024)  # Read a small portion to check for encoding issues
+                    f.read(1024)
+
         except Exception as e:
             Path(temp_path).unlink(missing_ok=True)
-            raise ValueError(f"Error occurred while validating file content: {str(e)}")
+            raise ValueError(
+                f"File content validation failed: {str(e)}"
+            )
         return temp_path
     finally:
         pass
