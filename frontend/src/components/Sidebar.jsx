@@ -174,7 +174,7 @@ export default function Sidebar({
           </div>
           <div className="truncate">
             <p className="text-xs font-semibold text-zinc-200 truncate">{user.first_name} {user.last_name || ''}</p>
-            <p className="text-[9px] text-zinc-500 truncate">{user.niat_id}</p>
+            <p className="text-[9px] text-zinc-500 truncate">{user.username}</p>
           </div>
         </div>
         <button 

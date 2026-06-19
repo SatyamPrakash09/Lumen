@@ -84,7 +84,7 @@ export const api = {
         password,
         first_name: firstName,
         last_name: lastName || null,
-        niat_id: niatId,
+        username: niatId,
       }),
     });
   },
@@ -92,7 +92,7 @@ export const api = {
   async login({ email, password, niatId }) {
     const payload = {};
     if (email) payload.email = email;
-    if (niatId) payload.niat_id = niatId;
+    if (niatId) payload.username = niatId;
     payload.password = password;
 
     return request('/auth/login', {
