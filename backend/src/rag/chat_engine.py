@@ -11,10 +11,10 @@ Then calls Ollama to generate a grounded answer.
 import logging
 from typing import Optional
 
-from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.documents import Document
 
+from src.rag.llm import get_llm_model
 from src.rag.vector_store import similarity_search
 from src.config.settings import get_settings
 
@@ -107,15 +107,10 @@ async def get_rag_response(
     context = _format_context(retrieved_docs)
     messages = _build_messages(query, context, chat_history)
 
-    # ── 3. Call Ollama ─────────────────────────────────────────────────────
-    llm = ChatOllama(
-        model=settings.OLLAMA_MODEL,
-        base_url=settings.OLLAMA_BASE_URL,
-        temperature=0.1,       # low temperature for factual RAG
-        num_predict=1024,
-    )
+    # ── 3. Call LLM ─────────────────────────────────────────────────────
+    llm = get_llm_model(temperature=0.1, max_tokens=1024)
 
-    logger.info(f"[RAG] Calling Ollama model: {settings.OLLAMA_MODEL}")
+    logger.info("[RAG] Calling LLM for response")
     response = await llm.ainvoke(messages)
     answer = response.content
 

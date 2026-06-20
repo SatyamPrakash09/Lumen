@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     CHROMA_DB_DIR: str = "./chroma_db"
     OLLAMA_MODEL: str = "gemma4:31b-cloud"
     EMBEDDING_MODEL: str = "huggingface/sentence-transformers/all-MiniLM-L6-v2"
+    OLLAMA_EMBEDDING_MODEL: str= "mxbai-embed-large:latest"
     RAG_TOP_K: int = 5
     GOOGLE_API_KEY: str = ""
     GOOGLE_GENAI_MODEL: str = "gemini-2.5-flash"

@@ -1,35 +1,48 @@
-from functools import lru_cache
-from langchain_google_genai import OllamaEmbeddings
-from src.config.settings import get_settings
+"""
+embeddings.py — Unified embedding model provider.
 
-settings = get_settings()
+Returns OllamaEmbeddings in development and GoogleGenerativeAIEmbeddings
+in production, based on settings.is_development.
+"""
+
+from functools import lru_cache
+from typing import Union
+
+from langchain_ollama import OllamaEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_core.embeddings import Embeddings
+
+from src.config.settings import get_settings
 
 
 @lru_cache(maxsize=4)
-def _get_embedding_model(model_name: str) -> OllamaEmbeddings:
-    """Cache the embedding model so it is only loaded once per process."""
-    return OllamaEmbeddings(
-        model="mxbai-embed-large"
+def _get_ollama_embeddings(model_name: str) -> OllamaEmbeddings:
+    """Cached Ollama embedding model instance."""
+    return OllamaEmbeddings(model=model_name)
+
+
+@lru_cache(maxsize=4)
+def _get_google_embeddings(model_name: str, api_key: str) -> GoogleGenerativeAIEmbeddings:
+    """Cached Google Generative AI embedding model instance."""
+    return GoogleGenerativeAIEmbeddings(
+        model=model_name,
+        google_api_key=api_key,
     )
 
 
-class Embeddings:
-    def __init__(self, model_name: str | None = None):
-        self.model_name = model_name or settings.EMBEDDING_MODEL
-        self.model = _get_embedding_model(self.model_name)
+def get_embedding_model() -> Embeddings:
+    """
+    Return the appropriate embedding model based on the current environment.
 
-    async def create_document_embeddings(self, documents: list[str]) -> list[list[float]]:
-        """Embed a list of text strings (document chunks)."""
-        try:
-            embeddings = self.model.embed_documents(documents)
-            return embeddings
-        except Exception as e:
-            raise Exception(f"Error creating document embeddings: {str(e)}")
+    - Development (is_development=True):  OllamaEmbeddings (local)
+    - Production  (is_development=False): GoogleGenerativeAIEmbeddings (API)
+    """
+    settings = get_settings()
 
-    async def create_query_embedding(self, query: str) -> list[float]:
-        """Embed a single query string."""
-        try:
-            embedding = self.model.embed_query(query)
-            return embedding
-        except Exception as e:
-            raise Exception(f"Error creating query embedding: {str(e)}")
+    if settings.is_development:
+        return _get_ollama_embeddings(settings.OLLAMA_EMBEDDING_MODEL)
+    else:
+        return _get_google_embeddings(
+            settings.EMBEDDING_MODEL,
+            settings.GOOGLE_API_KEY,
+        )

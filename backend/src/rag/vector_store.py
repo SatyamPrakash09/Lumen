@@ -1,13 +1,12 @@
 import os
 import threading
-from functools import lru_cache
 from typing import Optional
 
 import chromadb
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
+from src.rag.embeddings import get_embedding_model
 from src.config.settings import get_settings
 
 settings = get_settings()
@@ -27,14 +26,6 @@ def _get_chroma_client() -> chromadb.PersistentClient:
     return _chroma_client
 
 
-@lru_cache(maxsize=4)
-def _get_embedding_fn(model_name: str) -> GoogleGenerativeAIEmbeddings:
-    return GoogleGenerativeAIEmbeddings(
-        model=model_name,
-        google_api_key=settings.GOOGLE_API_KEY
-    )
-
-
 def _collection_name(session_id: str) -> str:
     return f"session_{session_id}"
 
@@ -43,7 +34,7 @@ def get_or_create_collection(session_id: str) -> Chroma:
     return Chroma(
         client=_get_chroma_client(),
         collection_name=_collection_name(session_id),
-        embedding_function=_get_embedding_fn(settings.EMBEDDING_MODEL),
+        embedding_function=get_embedding_model(),
     )
 
 

@@ -3,8 +3,8 @@ import re
 from typing import Optional
 
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_ollama import ChatOllama
+
+from src.rag.llm import get_llm_model
 from langgraph.prebuilt import create_react_agent
 
 from src.config.settings import get_settings
@@ -331,17 +331,7 @@ async def run_agent(
 ) -> dict:
     chat_history = chat_history or []
 
-    # llm = ChatGoogleGenerativeAI(
-    #     model=settings.GOOGLE_GENAI_MODEL,
-    #     temperature=0.1,
-    #     max_tokens=2048,
-    #     api_key=settings.GOOGLE_API_KEY,
-    # )
-    llm = ChatOllama(
-        model=settings.OLLAMA_MODEL,
-        temperature=0.1,
-        max_tokens=2048
-    )
+    llm = get_llm_model(temperature=0.1, max_tokens=2048)
     agent = create_react_agent(
         model=llm,
         tools=get_all_tools(session_id),
@@ -404,17 +394,7 @@ async def run_agent_stream(
 ):
     chat_history = chat_history or []
 
-    # llm = ChatGoogleGenerativeAI(
-    #     model=settings.GOOGLE_GENAI_MODEL,
-    #     temperature=0.1,
-    #     max_tokens=2048,
-    #     api_key=settings.GOOGLE_API_KEY,
-    # )
-    llm = ChatOllama(
-        model=settings.OLLAMA_MODEL,
-        temperature=0.1,
-        max_tokens=2048
-    )
+    llm = get_llm_model(temperature=0.1, max_tokens=2048)
 
     agent = create_react_agent(
         model=llm,
