@@ -4,12 +4,17 @@ import math
 import operator
 import os
 from datetime import datetime, UTC
+import requests
 
 import wikipediaapi
 from ddgs import DDGS
 from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
+
+from src.config.settings import get_settings
+
+settings = get_settings()
 
 
 def make_rag_search_tool(session_id: str):
@@ -259,9 +264,9 @@ def weather_search(city: str) -> str:
 
     print("\nCalling weather_search tool")
 
-    api_key = os.getenv("WEATHER_API_KEY")
+    api_key = settings.WEATHER_API
 
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    url = f"https://api.weatherapi.com/v1/current.json?q={city}&key={api_key}"
 
     response = requests.get(url)
 

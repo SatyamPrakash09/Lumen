@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     GOOGLE_GENAI_MODEL: str = "gemini-2.5-flash"
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
+    WEATHER_API:str = ""
 
     class Config:
         env_file = ".env"
