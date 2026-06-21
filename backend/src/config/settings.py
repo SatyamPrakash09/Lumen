@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "gemma4:31b-cloud"
     OLLAMA_EMBEDDING_MODEL: str = "mxbai-embed-large:latest"
     RAG_TOP_K: int = 5
+    CHUNK_SIZE: int = 2000
+    CHUNK_OVERLAP: int = 200
+    EMBEDDING_BATCH_SIZE: int = 50
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
     WEATHER_API:str = ""

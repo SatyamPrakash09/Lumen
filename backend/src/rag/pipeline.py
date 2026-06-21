@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -8,9 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.models import Documents, ChatSession
 from src.rag.loader import load_document
 from src.rag.splitter import split_document
-from src.rag.vector_store import add_chunks_to_store
+from src.rag.vector_store import add_chunk_batch
+from src.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 async def run_embedding_pipeline(
@@ -41,13 +44,40 @@ async def run_embedding_pipeline(
                     doc.metadata["source"] = original_filename
 
             chunks = split_document(documents)
-            logger.info(f"[Pipeline] {len(chunks)} chunks for {document_id}")
+            total_chunks = len(chunks)
+            logger.info(f"[Pipeline] {total_chunks} chunks for {document_id}")
 
-            await asyncio.get_event_loop().run_in_executor(
-                None, add_chunks_to_store, session_id, chunks
+            # ── Batched embedding ──────────────────────────────────────────
+            # Process chunks in small batches with async yields between them.
+            # This lets the event loop serve chat requests while Ollama is
+            # momentarily idle between batches.
+            batch_size = settings.EMBEDDING_BATCH_SIZE
+            embedded = 0
+            start_time = time.perf_counter()
+
+            for i in range(0, total_chunks, batch_size):
+                batch = chunks[i : i + batch_size]
+
+                # Run the blocking Ollama embedding call in a thread
+                await asyncio.to_thread(add_chunk_batch, session_id, batch)
+
+                embedded += len(batch)
+                elapsed = time.perf_counter() - start_time
+                rate = embedded / elapsed if elapsed > 0 else 0
+                logger.info(
+                    f"[Pipeline] {document_id}: {embedded}/{total_chunks} chunks "
+                    f"({embedded * 100 // total_chunks}%) — {rate:.0f} chunks/s"
+                )
+
+                # Yield control to the event loop so chat requests can get through
+                await asyncio.sleep(0.1)
+
+            elapsed = time.perf_counter() - start_time
+            logger.info(
+                f"[Pipeline] Finished {document_id}: {total_chunks} chunks in {elapsed:.1f}s"
             )
 
-            await _set_document_status(db, document_id, "ready", total_chunks=len(chunks))
+            await _set_document_status(db, document_id, "ready", total_chunks=total_chunks)
             await _update_session_status(db, session_id)
 
         except Exception as e:

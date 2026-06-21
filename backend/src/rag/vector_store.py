@@ -39,11 +39,21 @@ def get_or_create_collection(session_id: str) -> Chroma:
 
 
 def add_chunks_to_store(session_id: str, chunks: list[Document]) -> int:
+    """Add all chunks at once (kept for backward-compat, small files)."""
     if not chunks:
         return 0
     store = get_or_create_collection(session_id)
     store.add_documents(chunks)
     return len(chunks)
+
+
+def add_chunk_batch(session_id: str, batch: list[Document]) -> int:
+    """Embed and store a single batch of chunks. Called from the async pipeline."""
+    if not batch:
+        return 0
+    store = get_or_create_collection(session_id)
+    store.add_documents(batch)
+    return len(batch)
 
 
 def similarity_search(session_id: str, query: str, k: Optional[int] = None) -> list[Document]:
