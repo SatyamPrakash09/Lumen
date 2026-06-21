@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.models import Documents, ChatSession
 from src.rag.loader import load_document
 from src.rag.splitter import split_document
-from src.rag.vector_store import add_chunk_batch
+from src.rag.vector_store import add_chunks_to_store
 from src.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ async def run_embedding_pipeline(
                 batch = chunks[i : i + batch_size]
 
                 # Run the blocking Ollama embedding call in a thread
-                await asyncio.to_thread(add_chunk_batch, session_id, batch)
+                await asyncio.to_thread(add_chunks_to_store, session_id, batch)
 
                 embedded += len(batch)
                 elapsed = time.perf_counter() - start_time
