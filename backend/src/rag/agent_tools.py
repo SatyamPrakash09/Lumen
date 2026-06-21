@@ -9,6 +9,7 @@ import requests
 import wikipediaapi
 from ddgs import DDGS
 from langchain_core.tools import tool
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -329,6 +330,30 @@ def search_hacker_news(
     except ValueError:
         return {"error": "Invalid JSON response from Hacker News API"}
 
+
+@tool
+def scrape_web(url: str) -> str:
+    """Fetch webpage content."""
+
+    try:
+        response = requests.get(
+            url,
+            timeout=10,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        for tag in soup(["script", "style", "nav", "footer"]):
+            tag.decompose()
+
+        text = soup.get_text(separator="\n")
+
+        return text[:15000]
+
+    except Exception as e:
+        return str(e)
+
 def get_all_tools(session_id: str) -> list:
     return [
         make_rag_search_tool(session_id),
@@ -340,5 +365,5 @@ def get_all_tools(session_id: str) -> list:
         search_papers,
         weather_search,
         search_hacker_news,
-
+        scrape_web,
     ]
