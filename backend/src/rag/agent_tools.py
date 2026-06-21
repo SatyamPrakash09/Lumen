@@ -291,18 +291,43 @@ Humidity: {humidity} %
 """
 
 @tool
-def search_hacker_news(query: str, tags: str = "story", numeric_filters: str = "") -> dict:
-    """Useful for searching Hacker News stories, comments, or front-page items using keywords. 
-    Tags can be 'story', 'comment', or 'front_page'."""
-    url = "https://algolia.com"
-    params = {"query": query, "tags": tags}
+def search_hacker_news(
+    query: str,
+    tags: str = "story",
+    numeric_filters: str = "",
+):
+    """
+    Search Hacker News stories, comments, or front-page items.
+
+    tags:
+      - story
+      - comment
+      - front_page
+    """
+
+    url = "https://hn.algolia.com/api/v1/search"
+
+    params = {
+        "query": query,
+        "tags": tags,
+    }
+
     if numeric_filters:
         params["numericFilters"] = numeric_filters
-        
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        return response.json().get("hits", [])
-    return {"error": "Failed to fetch data"}
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+
+        data = response.json()
+
+        return data.get("hits", [])
+
+    except requests.RequestException as e:
+        return {"error": f"Request failed: {str(e)}"}
+
+    except ValueError:
+        return {"error": "Invalid JSON response from Hacker News API"}
 
 def get_all_tools(session_id: str) -> list:
     return [
