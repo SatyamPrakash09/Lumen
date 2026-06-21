@@ -23,7 +23,6 @@ dependencies = [
     "wikipedia-api>=0.15.0",
     "pypdf>=6.13.0",
     "ddgs>=9.14.4",
-    "langchain-google-genai>=4.2.4",
     "asyncpg>=0.31.0",
     "slowapi>=0.1.9",
     "pypdf2>=3.0.1",
