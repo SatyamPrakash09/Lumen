@@ -1,4 +1,81 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { marked } from 'marked';
+
+function CopyButton({ text, label = 'Copy', className = '' }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }, [text]);
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`copy-btn ${copied ? 'copied' : ''} ${className}`}
+      title={copied ? 'Copied!' : label}
+    >
+      <span className="material-symbols-outlined copy-btn-icon" style={{ fontVariationSettings: "'FILL' 0" }}>
+        {copied ? 'check' : 'content_copy'}
+      </span>
+      <span className="copy-btn-label">{copied ? 'Copied!' : label}</span>
+    </button>
+  );
+}
+
+function MessageContent({ content }) {
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    const preBlocks = contentRef.current.querySelectorAll('pre');
+    preBlocks.forEach((pre) => {
+      // Skip if already has a copy button
+      if (pre.querySelector('.code-copy-btn')) return;
+
+      // Wrap pre in a relative container
+      pre.style.position = 'relative';
+
+      const codeEl = pre.querySelector('code');
+      const codeText = codeEl ? codeEl.textContent : pre.textContent;
+
+      const btn = document.createElement('button');
+      btn.className = 'code-copy-btn';
+      btn.title = 'Copy code';
+      btn.innerHTML = `<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0; font-size: 14px;">content_copy</span>`;
+      
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(codeText);
+          btn.innerHTML = `<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0; font-size: 14px;">check</span>`;
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0; font-size: 14px;">content_copy</span>`;
+            btn.classList.remove('copied');
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy code:', err);
+        }
+      });
+
+      pre.appendChild(btn);
+    });
+  }, [content]);
+
+  return (
+    <div 
+      ref={contentRef}
+      className="markdown-content text-zinc-200 text-sm leading-relaxed"
+      dangerouslySetInnerHTML={{ __html: marked.parse(content || '') }}
+    />
+  );
+}
 
 export default function ChatArea({ 
   activeSession, 
@@ -44,10 +121,12 @@ export default function ChatArea({
                   
                   <div className="flex-1 space-y-4 min-w-0">
                     {/* Response text */}
-                    <div 
-                      className="markdown-content text-zinc-200 text-sm leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: marked.parse(msg.content || '') }}
-                    />
+                    <MessageContent content={msg.content} />
+
+                    {/* Copy full response button */}
+                    <div className="flex items-center gap-1 pt-1">
+                      <CopyButton text={msg.content || ''} label="Copy" className="response-copy-btn" />
+                    </div>
 
                     {/* Citation pills */}
                     {msg.citations && msg.citations.length > 0 && (
