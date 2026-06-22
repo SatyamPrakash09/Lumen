@@ -25,6 +25,41 @@ export default function App() {
     bootstrap();
   }, []);
 
+  // Proactive token refresh — keeps the session alive while the user is active
+  useEffect(() => {
+    if (!user) return;
+
+    let lastActivity = Date.now();
+
+    const trackActivity = () => { lastActivity = Date.now(); };
+    window.addEventListener('mousemove', trackActivity, { passive: true });
+    window.addEventListener('keydown', trackActivity, { passive: true });
+    window.addEventListener('touchstart', trackActivity, { passive: true });
+    window.addEventListener('click', trackActivity, { passive: true });
+
+    // Refresh access token every 5 minutes if user was active in the last 10 minutes
+    const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 min
+    const IDLE_THRESHOLD = 10 * 60 * 1000;   // 10 min
+
+    const intervalId = setInterval(async () => {
+      if (Date.now() - lastActivity > IDLE_THRESHOLD) return; // user truly idle, skip
+      try {
+        await api.refreshToken();
+      } catch {
+        // Refresh failed — token is dead, log the user out
+        setUser(null);
+      }
+    }, REFRESH_INTERVAL);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('mousemove', trackActivity);
+      window.removeEventListener('keydown', trackActivity);
+      window.removeEventListener('touchstart', trackActivity);
+      window.removeEventListener('click', trackActivity);
+    };
+  }, [user]);
+
 
   const handleAuthSuccess = (authenticatedUser) => {
     setUser(authenticatedUser);
