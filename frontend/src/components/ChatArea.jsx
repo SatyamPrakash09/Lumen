@@ -108,7 +108,7 @@ export default function ChatArea({
             >
               {msg.sender === 'user' ? (
                 /* User Prompt Capsule */
-                <div className="bg-[#2f2f2f] text-zinc-100 rounded-2xl px-4 py-2.5 max-w-[70%] text-sm whitespace-pre-wrap leading-relaxed shadow-sm">
+                <div className="bg-[#2f2f2f] text-zinc-100 rounded-2xl px-4 py-2.5 max-w-[70%] text-sm whitespace-pre-wrap break-all leading-relaxed shadow-sm">
                   {msg.content}
                 </div>
               ) : (
