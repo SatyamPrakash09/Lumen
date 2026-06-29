@@ -4,7 +4,6 @@ from typing import Optional
 
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.prebuilt import create_agent
 from deepagents import create_deep_agent
 from src.config.settings import get_settings
 from src.rag.agent_tools import get_all_tools
