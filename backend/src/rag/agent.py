@@ -5,7 +5,8 @@ from typing import Optional
 from langchain_core.messages import HumanMessage, AIMessage
 
 from src.rag.llm import get_llm_model
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
+from deepagents import create_deep_agent
 
 from src.config.settings import get_settings
 from src.rag.agent_tools import get_all_tools
@@ -332,7 +333,7 @@ async def run_agent(
     chat_history = chat_history or []
 
     llm = get_llm_model(temperature=0.1, max_tokens=2048)
-    agent = create_react_agent(
+    agent = create_deep_agent(
         model=llm,
         tools=get_all_tools(session_id),
         prompt=AGENT_SYSTEM_PROMPT,
@@ -396,10 +397,10 @@ async def run_agent_stream(
 
     llm = get_llm_model(temperature=0.1, max_tokens=2048)
 
-    agent = create_react_agent(
+    agent = create_deep_agent(
         model=llm,
         tools=get_all_tools(session_id),
-        prompt=AGENT_SYSTEM_PROMPT,
+        system_prompt=AGENT_SYSTEM_PROMPT,
     )
 
     messages = []

@@ -30,4 +30,5 @@ dependencies = [
     "docx2txt>=0.9",
     "requests>=2.34.2",
     "beautifulsoup4>=4.15.0",
+    "deepagents>=0.6.12",
 ]
