@@ -24,8 +24,30 @@ def make_rag_search_tool(session_id: str):
     @tool
     def search_documents(query: str) -> str:
         """
-        Search uploaded documents for content relevant to the query.
-        Always call this tool first before any other tool.
+            Search the uploaded documents associated with the current chat session.
+
+            Use this tool whenever the user's question may be answered using uploaded
+            files (PDF, DOCX, TXT, Markdown, CSV, etc.).
+
+            This should ALWAYS be the first retrieval tool used before searching the web.
+
+            Examples:
+            - "Summarize the uploaded report."
+            - "What does page 12 mention?"
+            - "Find all mentions of transformer architecture."
+            - "What is the refund policy in my PDF?"
+
+            Do NOT use this tool for:
+            - Current events
+            - General knowledge
+            - Information outside uploaded documents
+
+            Args:
+                query: Natural language search query.
+
+            Returns:
+                Relevant document chunks with citation metadata that can be referenced
+                in the final answer.
         """
         try:
             docs = similarity_search(session_id, query)
@@ -56,8 +78,29 @@ def make_rag_search_tool(session_id: str):
 @tool
 def web_search(query: str, max_results: int = 5) -> str:
     """
-    Search the web via DuckDuckGo to verify and enrich document findings.
-    Always call this after search_documents.
+    Search the public web using DuckDuckGo.
+
+    Use this tool only when:
+
+    - uploaded documents do not contain the answer
+    - information must be verified
+    - current or recent information is required
+    - additional context is needed
+
+    Prefer search_documents whenever uploaded files may contain the answer.
+
+    Examples:
+    - latest Python release
+    - current stock price
+    - recent AI news
+    - verify a fact from a PDF
+
+    Args:
+        query: Search query.
+        max_results: Maximum number of search results.
+
+    Returns:
+        Web search snippets with source URLs.
     """
     try:
         with DDGS() as ddgs:
@@ -81,7 +124,29 @@ def web_search(query: str, max_results: int = 5) -> str:
 
 @tool
 def wikipedia_search(topic: str, sentences: int = 5) -> str:
-    """Search Wikipedia for encyclopedic background, definitions, or history."""
+    """
+    Retrieve encyclopedic information from Wikipedia.
+
+    Use this tool for:
+
+    - definitions
+    - historical background
+    - biographies
+    - scientific concepts
+    - general knowledge
+
+    Avoid using it for:
+    - current news
+    - rapidly changing information
+    - product pricing
+
+    Args:
+        topic: Wikipedia article title or topic.
+        sentences: Number of summary sentences.
+
+    Returns:
+        Concise Wikipedia summary with citation.
+    """
     try:
         wiki = wikipediaapi.Wikipedia(
             user_agent="Lumen-AI-Agent/1.0 (contact@lumen.app)",
@@ -161,8 +226,31 @@ def _safe_eval(node):
 @tool
 def calculator(expression: str) -> str:
     """
-    Safely evaluate a math expression.
-    Supports: +, -, *, /, **, sqrt, sin, cos, tan, log, log10, factorial, ceil, floor, pi, e.
+    Safely evaluate mathematical expressions.
+
+    Supports:
+
+    - +, -, *, /, //, %, **
+    - sqrt
+    - factorial
+    - sin, cos, tan
+    - log, log10
+    - ceil, floor
+    - constants pi and e
+
+    Always use this tool whenever a calculation is required instead of estimating.
+
+    Examples:
+    - 2+2
+    - sqrt(49)
+    - factorial(10)
+    - sin(pi/4)
+
+    Args:
+        expression: Mathematical expression.
+
+    Returns:
+        Computed result or an error message.
     """
     try:
         expr = expression.strip()
@@ -182,7 +270,23 @@ def calculator(expression: str) -> str:
 
 @tool
 def get_current_datetime(timezone: str = "UTC") -> str:
-    """Return the current UTC date and time."""
+    """
+    Return the current date and time.
+
+    Useful for answering questions involving:
+
+    - today's date
+    - current UTC time
+    - timestamps
+    - scheduling context
+    - date calculations
+
+    Args:
+        timezone: Reserved for future support. Currently ignored.
+
+    Returns:
+        Current UTC date and time in multiple formats.
+    """
     now = datetime.now(UTC)
     return (
         f"Current date and time (UTC):\n"
@@ -197,7 +301,30 @@ def make_summarize_tool(session_id: str):
 
     @tool
     def summarize_documents(focus: str = "") -> str:
-        """Return a broad overview of all documents uploaded to this session."""
+        """
+    Generate a high-level summary of the uploaded documents.
+
+    Use this tool when the user requests:
+
+    - an overview
+    - executive summary
+    - key points
+    - document synopsis
+    - main ideas
+
+    Optionally provide a focus topic to bias the summary.
+
+    Examples:
+    - "Summarize the document."
+    - "Give me the key findings."
+    - "Summarize only the security section."
+
+    Args:
+        focus: Optional topic to prioritize.
+
+    Returns:
+        Representative document excerpts with citation metadata.
+    """
         try:
             store = get_or_create_collection(session_id)
             query = focus if focus else "main topic summary overview introduction"
@@ -226,7 +353,32 @@ def make_summarize_tool(session_id: str):
 # semantic scholar tool
 @tool
 def search_papers(query: str) -> str:
-    """Search Semantic Scholar for research papers related to a topic."""
+    """
+    Search Semantic Scholar for academic research papers.
+
+    Use this tool for:
+
+    - peer-reviewed research
+    - scientific evidence
+    - citations
+    - literature review
+    - state-of-the-art methods
+
+    Prefer this over web search whenever the user explicitly asks for research papers.
+
+    Examples:
+    - RAG papers
+    - Vision Transformer research
+    - diffusion models
+    - reinforcement learning survey
+
+    Args:
+        query: Research topic.
+
+    Returns:
+        Up to five relevant papers including title, authors, year,
+        abstract, and Semantic Scholar URL.
+    """
     
     print("\nCalling search_papers tool")
     print(f"Searching papers for: {query}\n")
@@ -261,8 +413,25 @@ def search_papers(query: str) -> str:
 
 @tool
 def weather_search(city: str) -> str:
-    """Get current weather for a city."""
+    """
+    Retrieve the current weather conditions for a city.
 
+    Use when the user asks about:
+
+    - weather
+    - temperature
+    - humidity
+    - current conditions
+
+    Do not use for weather forecasts.
+
+    Args:
+        city: City or location name.
+
+    Returns:
+        Current weather information including temperature,
+        humidity, and conditions.
+    """
     print("\nCalling weather_search tool")
 
     api_key = settings.WEATHER_API
@@ -298,12 +467,25 @@ def search_hacker_news(
     numeric_filters: str = "",
 ):
     """
-    Search Hacker News stories, comments, or front-page items.
+    Search Hacker News stories and comments.
 
-    tags:
-      - story
-      - comment
-      - front_page
+    Useful for finding:
+
+    - startup discussions
+    - engineering news
+    - programming trends
+    - AI community discussions
+    - launch announcements
+
+    Supports searching stories, comments, or the front page.
+
+    Args:
+        query: Search keywords.
+        tags: One of "story", "comment", or "front_page".
+        numeric_filters: Optional Algolia numeric filters.
+
+    Returns:
+        Matching Hacker News posts with metadata.
     """
 
     url = "https://hn.algolia.com/api/v1/search"
@@ -333,7 +515,28 @@ def search_hacker_news(
 
 @tool
 def scrape_web(url: str) -> str:
-    """Fetch webpage content."""
+    """
+    Download and extract readable text from a webpage.
+
+    Use this tool after obtaining a URL from the user or another tool.
+
+    The scraper removes scripts, navigation, styles, and other boilerplate,
+    returning the primary textual content.
+
+    Examples:
+    - summarize an article
+    - extract documentation
+    - analyze a blog post
+
+    Do not use this tool to search the internet.
+    Use web_search first when no URL is available.
+
+    Args:
+        url: Fully qualified webpage URL.
+
+    Returns:
+        Cleaned text extracted from the webpage.
+    """
 
     try:
         response = requests.get(
