@@ -26,3 +26,8 @@ dist-ssr
 
 
 .vercel
+
+# Storage
+storage/
+./storage
+backend/storage

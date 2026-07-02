@@ -144,3 +144,4 @@ cython_debug/
 #uploads
 uploads/
 chroma_db/
+backend/storage
