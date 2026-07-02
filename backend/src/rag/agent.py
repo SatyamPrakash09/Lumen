@@ -5,11 +5,14 @@ from typing import Optional
 from langchain_core.messages import HumanMessage, AIMessage
 
 from src.rag.llm import get_llm_model
+
 from langchain.agents import create_agent
 from deepagents import create_deep_agent
-
+from deepagents.backends import FilesystemBackend
 from src.config.settings import get_settings
 from src.rag.agent_tools import get_all_tools
+from src.models.models import User
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -324,19 +327,32 @@ def _deduplicate_citations(citations: list[dict]) -> list[dict]:
             unique.append(c)
     return unique
 
+from src.config.settings import get_settings
+from fastapi import Depends
+from src.controllers.auth_controller import current_user
+from pathlib import Path
+settings = get_settings()
 
 async def run_agent(
     session_id: str,
     query: str,
+    user_id:str,
     chat_history: Optional[list[dict]] = None,
 ) -> dict:
     chat_history = chat_history or []
 
     llm = get_llm_model(temperature=0.1, max_tokens=2048)
+
+    backend = FilesystemBackend(
+        root_dir=settings.STORAGE,
+        virtual_mode=True
+    )
+
     agent = create_deep_agent(
         model=llm,
         tools=get_all_tools(session_id),
-        prompt=AGENT_SYSTEM_PROMPT,
+        system_prompt=AGENT_SYSTEM_PROMPT,
+        backend=backend
     )
 
     messages = []
@@ -391,9 +407,21 @@ async def run_agent(
 async def run_agent_stream(
     session_id: str,
     query: str,
+    user_id:str,
     chat_history: Optional[list[dict]] = None,
 ):
     chat_history = chat_history or []
+    WORKSPACE_DIR = (
+        Path(settings.STORAGE_DIR)
+        / "workspaces"
+        / str(user_id)
+        / str(session_id)
+    )
+    WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
+    backend = FilesystemBackend(
+        root_dir=WORKSPACE_DIR,
+        virtual_mode=True
+    )
 
     llm = get_llm_model(temperature=0.1, max_tokens=2048)
 
@@ -401,6 +429,7 @@ async def run_agent_stream(
         model=llm,
         tools=get_all_tools(session_id),
         system_prompt=AGENT_SYSTEM_PROMPT,
+        backend=backend
     )
 
     messages = []

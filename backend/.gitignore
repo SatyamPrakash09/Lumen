@@ -145,3 +145,7 @@ cython_debug/
 uploads/
 chroma_db/
 backend/storage
+storage/*
+storage/
+./storage/
+./storage/*

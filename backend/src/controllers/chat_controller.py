@@ -63,6 +63,7 @@ async def agent_chat(
         result = await run_agent(
             session_id=session_id,
             query=query,
+            user_id = user.id,
             chat_history=chat_history,
         )
     except Exception as e:
@@ -133,6 +134,7 @@ async def agent_chat_stream(
         async for event in run_agent_stream(
             session_id=session_id,
             query=query,
+            user_id = user.id,
             chat_history=chat_history,
         ):
             if event["type"] == "token":
