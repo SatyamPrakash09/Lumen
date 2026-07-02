@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
     WEATHER_API:str = ""
+    STORAGE_DIR: str = "./storage"
 
     class Config:
         env_file = ".env"

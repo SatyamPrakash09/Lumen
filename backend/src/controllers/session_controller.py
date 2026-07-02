@@ -116,7 +116,12 @@ async def attach_documents_to_session(
     created_docs: list[tuple[Documents, str, str]] = []
     try:
         for file, temp_path, ext in validated_temp_paths:
-            user_dir = os.path.join(settings.UPLOAD_DIR, str(user.id), session_id)
+            user_dir = (
+                Path(settings.STORAGE_DIR)
+                / "uploads"
+                / str(user.id)
+                / str(session_id)
+            )
             os.makedirs(user_dir, exist_ok=True)
             stored_filename = f"{uuid.uuid4().hex}.{ext}"
             filepath = os.path.join(user_dir, stored_filename)
