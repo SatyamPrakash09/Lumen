@@ -346,7 +346,7 @@ async def run_agent(
     )
 
     backend = FilesystemBackend(
-        root_dir=settings.STORAGE,
+        root_dir=settings.STORAGE_DIR,
         virtual_mode=True
     )
 
