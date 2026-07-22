@@ -1,20 +1,18 @@
 info:
   name: agent_chat
   type: http
-  seq: 9
+  seq: 12
 
 http:
   method: POST
-  url: "{{base_url}}/sessions/d052abbb-0aa3-4513-b0a0-3aaab4956f6f/agent/stream"
+  url: "{{base_url}}/sessions/726a5165-7008-4b8f-8249-6ef75be31239/agent"
   body:
     type: json
-    data: "{\r
-
-      \    \"query\":\"what is ai\"\r
-
-      \    \r
-
-      }"
+    data: |-
+      {
+          "query":"what is ai"
+          
+      }
   auth: inherit
 
 settings:

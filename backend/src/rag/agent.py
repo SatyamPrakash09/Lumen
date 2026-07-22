@@ -344,7 +344,7 @@ async def run_agent(
     llm = get_llm_model(temperature=0.1, max_tokens=2048)
 
     backend = FilesystemBackend(
-        root_dir=settings.STORAGE,
+        root_dir=settings.STORAGE_DIR,
         virtual_mode=True
     )
 

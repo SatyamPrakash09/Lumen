@@ -8,19 +8,14 @@ http:
   url: "{{base_url}}/auth/register"
   body:
     type: json
-    data: "{\r
-
-      \    \"email\":\"user@admin.com\",\r
-
-      \    \"password\":\"12345\",\r
-
-      \    \"niat_id\" : \"n2500023\",\r
-
-      \    \"first_name\":\"user\",\r
-
-      \    \"last_name\":\"admin\"\r
-
-      }"
+    data: |-
+      {
+          "email":"user@admin.com",
+          "password":"12345",
+          "useername" : "n2500023",
+          "first_name":"user",
+          "last_name":"admin"
+      }
   auth: inherit
 
 settings:
