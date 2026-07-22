@@ -1,0 +1,15 @@
+info:
+  name: new_email
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: http://
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
