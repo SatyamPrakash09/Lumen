@@ -1,0 +1,30 @@
+info:
+  name: register
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/auth/register"
+  body:
+    type: json
+    data: "{\r
+
+      \    \"email\":\"user@admin.com\",\r
+
+      \    \"password\":\"12345\",\r
+
+      \    \"niat_id\" : \"n2500023\",\r
+
+      \    \"first_name\":\"user\",\r
+
+      \    \"last_name\":\"admin\"\r
+
+      }"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

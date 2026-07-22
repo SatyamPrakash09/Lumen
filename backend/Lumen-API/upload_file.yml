@@ -1,0 +1,22 @@
+info:
+  name: upload_file
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{base_url}}/sessions/22071841-ad82-41ab-9c0e-82036df21117/documents"
+  body:
+    type: multipart-form
+    data:
+      - name: files
+        type: file
+        value:
+          - c:\Users\SATYAM PRAKASH\Downloads\NIU Sem 2 __ End Sem Exam Mock Question Papers Physics.docx
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

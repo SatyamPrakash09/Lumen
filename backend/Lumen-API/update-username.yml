@@ -1,0 +1,22 @@
+info:
+  name: update-username
+  type: http
+  seq: 10
+
+http:
+  method: POST
+  url: "{{base_url}}/auth/update-username"
+  body:
+    type: json
+    data: "{\r
+
+      \    \"new_username\":\"adminOnix1234\"\r
+
+      }"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,15 @@
+info:
+  name: get documents
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{base_url}}/sessions/22071841-ad82-41ab-9c0e-82036df21117/documents"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
