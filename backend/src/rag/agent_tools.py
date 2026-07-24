@@ -5,7 +5,7 @@ import operator
 import os
 from datetime import datetime, UTC
 import requests
-
+import serpapi
 import wikipediaapi
 from ddgs import DDGS
 from langchain_core.tools import tool
@@ -78,7 +78,7 @@ def make_rag_search_tool(session_id: str):
 @tool
 def web_search(query: str, max_results: int = 5) -> str:
     """
-    Search the public web using DuckDuckGo.
+    Search the public web using DuckDuckGo and Google Search.
 
     Use this tool only when:
 
@@ -104,8 +104,14 @@ def web_search(query: str, max_results: int = 5) -> str:
     """
     try:
         with DDGS() as ddgs:
-            results = list(ddgs.text(query, max_results=max_results))
+            ddgs_results = list(ddgs.text(query, max_results=max_results))
 
+        serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
+        google_results = serpapi_client.search({
+            "engine": "google",
+            "q": f"{query}"
+        })
+        results = ddgs_results.append(google_results)
         if not results:
             return "No web search results found."
 
@@ -121,6 +127,44 @@ def web_search(query: str, max_results: int = 5) -> str:
         logger.error(f"[Tool:web_search] Error: {e}")
         return f"Web search failed: {str(e)}"
 
+@tool
+def search_images(query:str) -> list[dict]:
+    """
+    Search Google Images for high-quality visual references.
+
+    This tool should be used only when visual assets are required for a report,
+    documentation, presentation, or user request. It is intended to locate
+    relevant images such as logos, diagrams, architecture illustrations,
+    timelines, screenshots, and photographs.
+
+    Input:
+        query: A specific search query (e.g., "Hugging Face logo",
+        "MITRE ATT&CK matrix", "Kubernetes architecture").
+
+    Returns:
+        Up to 12 image search results, each including:
+        - number: Search result position.
+        - image_title: Image title or description.
+
+    Guidelines:
+        - Use one focused query instead of multiple broad searches.
+        - Do not use for factual information or text research.
+        - Avoid repeating searches for the same topic unless the previous
+          results were insufficient.
+    """
+    serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
+    google_image_results = serpapi_client.search({
+        "engine": "google_images",
+        "q": f"{query}"
+    })
+    results=google_image_results.as_dict()["images_results"][:12]
+    image_details=[{
+        "number": image["position"],
+        "image_title": image["title"],
+        "image_link" : image["original"]
+    } for image in results]
+    return image_details
+    
 
 @tool
 def wikipedia_search(topic: str, sentences: int = 5) -> str:
@@ -557,6 +601,53 @@ def scrape_web(url: str) -> str:
     except Exception as e:
         return str(e)
 
+@tool
+def search_youtube(query:str) -> list[dict] :
+        """
+        Search YouTube for relevant videos matching a given topic or query.
+
+        Use this tool when the user requests YouTube videos, tutorials, lectures, demonstrations, interviews, conference talks, documentaries, product announcements, or any other video-based learning resources. It is also useful when creating research reports, documentation, presentations, or educational content that would benefit from video references.
+
+        Input:
+            query: A concise and specific search query describing the desired videos.
+
+        Returns:
+            An organized list of up to 12 relevant YouTube videos. Each result includes:
+            - number: Position of the video in the search results.
+            - video_title: Title of the video.
+            - channel_name: Name of the YouTube channel.
+            - video_link: Direct link to the YouTube video.
+            - thumbnail: Thumbnail image representing the video.
+
+        Presentation Guidelines:
+        - Display the results in a clean, well-organized, and numbered format.
+        - Use the provided thumbnail as the visual preview for each video whenever the output format supports images.
+        - When HTML output is supported, render the results as a professional, responsive layout (such as cards or a table) with proper alignment and spacing.
+        - Ensure each thumbnail is aligned with its corresponding title, channel name, and video link.
+        - Make the video title clickable using the video URL.
+        - Preserve the original search ranking and avoid reordering the results.
+        - Ensure the HTML is valid, semantic, visually consistent, and free of broken layouts or overlapping elements.
+
+        Usage Guidelines:
+        - Use specific search queries (e.g., "Hugging Face Security Incident July 2026", "LangGraph tutorial", "MITRE ATT&CK explained") instead of broad topics.
+        - Perform only one search per unique topic unless additional videos are explicitly required.
+        - Do not use this tool for factual research when reliable textual sources are more appropriate. Use it only when video references are requested or would significantly improve the response.
+        """
+        serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
+        google_image_results = serpapi_client.search({
+            "engine": "youtube",
+            "search_query": f"{query}"
+        })
+        results=google_image_results.as_dict()["video_results"][:12]
+        video_details=[{
+            "number": video["position_on_page"],
+            "video_title": video["title"],
+            "video_link" : video["link"],
+            "channel_name": video["channel"]["name"],
+            "thumbnail": video["thumbnail"]["static"]
+        } for video in results]
+        return video_details
+    
 def get_all_tools(session_id: str) -> list:
     return [
         make_rag_search_tool(session_id),
@@ -569,4 +660,6 @@ def get_all_tools(session_id: str) -> list:
         weather_search,
         search_hacker_news,
         scrape_web,
+        search_images,
+        search_youtube,
     ]
