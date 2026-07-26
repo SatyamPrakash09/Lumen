@@ -30,7 +30,7 @@ graph TD
     subgraph Storage [Databases & External APIs]
         DB[("Supabase PostgreSQL DB (Metadata & History)")]
         Chroma[("ChromaDB (Vector Store)")]
-        Ollama["Ollama (Llama 3.2 Model)"]
+        Ollama["Ollama (Gemma 4)"]
         Web["DuckDuckGo API (Web Verification)"]
     end
 
