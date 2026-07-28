@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "models/gemini-embedding-2"
     RAG_TOP_K: int = 5
     GOOGLE_API_KEY: str = ""
-    GOOGLE_GENAI_MODEL: str = "gemini-2.5-flash"
+    GOOGLE_GENAI_MODEL: str = "gemma-4-31b-it"
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
     WEATHER_API:str = ""
