@@ -4,12 +4,8 @@ import math
 import operator
 import os
 from datetime import datetime, UTC
-import requests
-import serpapi
-import wikipediaapi
-from ddgs import DDGS
+import httpx
 from langchain_core.tools import tool
-from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +72,9 @@ def make_rag_search_tool(session_id: str):
 
 
 @tool
-def web_search(query: str, max_results: int = 5) -> str:
+async def web_search(query: str, max_results: int = 5) -> str:
     """
-    Search the public web using DuckDuckGo and Google Search.
+    Search the public web using Google Search.
 
     Use this tool only when:
 
@@ -103,120 +99,36 @@ def web_search(query: str, max_results: int = 5) -> str:
         Web search snippets with source URLs.
     """
     try:
-        with DDGS() as ddgs:
-            ddgs_results = list(ddgs.text(query, max_results=max_results))
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(
+                "https://serpapi.com/search.json",
+                params={
+                    "api_key": settings.SERP_API_KEY,
+                    "engine": "google",
+                    "q": query,
+                    "num": max_results,
+                },
+            )
+            resp.raise_for_status()
+            google_raw = resp.json()
 
-        serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
-        google_raw = serpapi_client.search({
-            "engine": "google",
-            "q": f"{query}"
-        })
-        # Normalize Google organic results to match DuckDuckGo format
-        for gr in google_raw.get("organic_results", []):
-            ddgs_results.append({
-                "title": gr.get("title", "No title"),
-                "href": gr.get("link", ""),
-                "body": gr.get("snippet", ""),
-            })
+        results = google_raw.get("organic_results", [])[:max_results]
 
-        if not ddgs_results:
+        if not results:
             return "No web search results found."
 
         parts = []
-        for i, r in enumerate(ddgs_results, 1):
+        for i, r in enumerate(results, 1):
             title = r.get("title", "No title").replace("|", "-")[:120].replace("\n", " ")
-            url = r.get("href", "")
+            url = r.get("link", "")
+            snippet = r.get("snippet", "")
             header = f"@@CITE_WEB|index={i}|title={title}|url={url}@@"
-            parts.append(f"{header}\n{r.get('body', '')[:500]}\n@@END_CITE@@")
+            parts.append(f"{header}\n{snippet[:500]}\n@@END_CITE@@")
 
         return "\n\n".join(parts)
     except Exception as e:
         logger.error(f"[Tool:web_search] Error: {e}")
         return f"Web search failed: {str(e)}"
-
-@tool
-def search_images(query:str) -> list[dict]:
-    """
-    Search Google Images for high-quality visual references.
-
-    This tool should be used only when visual assets are required for a report,
-    documentation, presentation, or user request. It is intended to locate
-    relevant images such as logos, diagrams, architecture illustrations,
-    timelines, screenshots, and photographs.
-
-    Input:
-        query: A specific search query (e.g., "Hugging Face logo",
-        "MITRE ATT&CK matrix", "Kubernetes architecture").
-
-    Returns:
-        Up to 12 image search results, each including:
-        - number: Search result position.
-        - image_title: Image title or description.
-
-    Guidelines:
-        - Use one focused query instead of multiple broad searches.
-        - Do not use for factual information or text research.
-        - Avoid repeating searches for the same topic unless the previous
-          results were insufficient.
-    """
-    serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
-    google_image_results = serpapi_client.search({
-        "engine": "google_images",
-        "q": f"{query}"
-    })
-    results=google_image_results.as_dict()["images_results"][:12]
-    image_details=[{
-        "number": image["position"],
-        "image_title": image["title"],
-        "image_link" : image["original"]
-    } for image in results]
-    return image_details
-    
-
-@tool
-def wikipedia_search(topic: str, sentences: int = 5) -> str:
-    """
-    Retrieve encyclopedic information from Wikipedia.
-
-    Use this tool for:
-
-    - definitions
-    - historical background
-    - biographies
-    - scientific concepts
-    - general knowledge
-
-    Avoid using it for:
-    - current news
-    - rapidly changing information
-    - product pricing
-
-    Args:
-        topic: Wikipedia article title or topic.
-        sentences: Number of summary sentences.
-
-    Returns:
-        Concise Wikipedia summary with citation.
-    """
-    try:
-        wiki = wikipediaapi.Wikipedia(
-            user_agent="Lumen-AI-Agent/1.0 (contact@lumen.app)",
-            language="en",
-        )
-        page = wiki.page(topic)
-
-        if not page.exists():
-            return f"No Wikipedia article found for '{topic}'."
-
-        summary = ". ".join(page.summary.split(". ")[:sentences])
-        if not summary.endswith("."):
-            summary += "."
-
-        safe_title = page.title.replace("|", "-")
-        return f"@@CITE_WIKI|title={safe_title}|url={page.fullurl}@@\n{summary}\n@@END_CITE@@"
-    except Exception as e:
-        logger.error(f"[Tool:wikipedia_search] Error: {e}")
-        return f"Wikipedia search failed: {str(e)}"
 
 
 _SAFE_NODES = {
@@ -401,118 +313,9 @@ def make_summarize_tool(session_id: str):
 
     return summarize_documents
 
-# semantic scholar tool
-@tool
-def search_papers(query: str) -> str:
-    """
-    Search Semantic Scholar for academic research papers.
-
-    Use this tool for:
-
-    - peer-reviewed research
-    - scientific evidence
-    - citations
-    - literature review
-    - state-of-the-art methods
-
-    Prefer this over web search whenever the user explicitly asks for research papers.
-
-    Examples:
-    - RAG papers
-    - Vision Transformer research
-    - diffusion models
-    - reinforcement learning survey
-
-    Args:
-        query: Research topic.
-
-    Returns:
-        Up to five relevant papers including title, authors, year,
-        abstract, and Semantic Scholar URL.
-    """
-    
-    print("\nCalling search_papers tool")
-    print(f"Searching papers for: {query}\n")
-
-    url = "https://api.semanticscholar.org/graph/v1/paper/search"
-
-    params = {
-        "query": query,
-        "limit": 5,
-        "fields": "title,authors,year,abstract,url"
-    }
-
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    papers = data.get("data", [])
-
-    results = []
-
-    for paper in papers:
-        authors = ", ".join([a["name"] for a in paper.get("authors", [])])
-
-        results.append(
-            f"Title: {paper.get('title','')}\n"
-            f"Authors: {authors}\n"
-            f"Year: {paper.get('year','')}\n"
-            f"Abstract: {paper.get('abstract','')}\n"
-            f"URL: {paper.get('url','')}\n"
-        )
-
-    return "\n\n".join(results)
 
 @tool
-def weather_search(city: str) -> str:
-    """
-    Retrieve the current weather conditions for a city.
-
-    Use when the user asks about:
-
-    - weather
-    - temperature
-    - humidity
-    - current conditions
-
-    Do not use for weather forecasts.
-
-    Args:
-        city: City or location name.
-
-    Returns:
-        Current weather information including temperature,
-        humidity, and conditions.
-    """
-    print("\nCalling weather_search tool")
-
-    api_key = settings.WEATHER_API
-
-    url = f"https://api.weatherapi.com/v1/current.json?q={city}&key={api_key}"
-
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        return f"Weather API error: {response.status_code}"
-
-    data = response.json()
-
-    # check if API returned an error
-    if "weather" not in data:
-        return f"Weather data not available. API response: {data}"
-
-    weather = data["weather"][0]["description"]
-    temp = data["main"]["temp"]
-    humidity = data["main"]["humidity"]
-
-    return f"""
-City: {city}
-Temperature: {temp} °C
-Weather: {weather}
-Humidity: {humidity} %
-"""
-
-@tool
-def search_hacker_news(
+async def search_hacker_news(
     query: str,
     tags: str = "story",
     numeric_filters: str = "",
@@ -550,8 +353,9 @@ def search_hacker_news(
         params["numericFilters"] = numeric_filters
 
     try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
 
         data = response.json()
         hits = data.get("hits", [])
@@ -569,116 +373,19 @@ def search_hacker_news(
 
         return "\n\n".join(parts)
 
-    except requests.RequestException as e:
+    except httpx.HTTPStatusError as e:
         return {"error": f"Request failed: {str(e)}"}
 
-    except ValueError:
-        return {"error": "Invalid JSON response from Hacker News API"}
-
-
-@tool
-def scrape_web(url: str) -> str:
-    """
-    Download and extract readable text from a webpage.
-
-    Use this tool after obtaining a URL from the user or another tool.
-
-    The scraper removes scripts, navigation, styles, and other boilerplate,
-    returning the primary textual content.
-
-    Examples:
-    - summarize an article
-    - extract documentation
-    - analyze a blog post
-
-    Do not use this tool to search the internet.
-    Use web_search first when no URL is available.
-
-    Args:
-        url: Fully qualified webpage URL.
-
-    Returns:
-        Cleaned text extracted from the webpage.
-    """
-
-    try:
-        response = requests.get(
-            url,
-            timeout=10,
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        for tag in soup(["script", "style", "nav", "footer"]):
-            tag.decompose()
-
-        text = soup.get_text(separator="\n")
-
-        return text[:15000]
-
     except Exception as e:
-        return str(e)
+        return {"error": f"Hacker News search failed: {str(e)}"}
 
-@tool
-def search_youtube(query:str) -> list[dict] :
-        """
-        Search YouTube for relevant videos matching a given topic or query.
 
-        Use this tool when the user requests YouTube videos, tutorials, lectures, demonstrations, interviews, conference talks, documentaries, product announcements, or any other video-based learning resources. It is also useful when creating research reports, documentation, presentations, or educational content that would benefit from video references.
-
-        Input:
-            query: A concise and specific search query describing the desired videos.
-
-        Returns:
-            An organized list of up to 12 relevant YouTube videos. Each result includes:
-            - number: Position of the video in the search results.
-            - video_title: Title of the video.
-            - channel_name: Name of the YouTube channel.
-            - video_link: Direct link to the YouTube video.
-            - thumbnail: Thumbnail image representing the video.
-
-        Presentation Guidelines:
-        - Display the results in a clean, well-organized, and numbered format.
-        - Use the provided thumbnail as the visual preview for each video whenever the output format supports images.
-        - When HTML output is supported, render the results as a professional, responsive layout (such as cards or a table) with proper alignment and spacing.
-        - Ensure each thumbnail is aligned with its corresponding title, channel name, and video link.
-        - Make the video title clickable using the video URL.
-        - Preserve the original search ranking and avoid reordering the results.
-        - Ensure the HTML is valid, semantic, visually consistent, and free of broken layouts or overlapping elements.
-
-        Usage Guidelines:
-        - Use specific search queries (e.g., "Hugging Face Security Incident July 2026", "LangGraph tutorial", "MITRE ATT&CK explained") instead of broad topics.
-        - Perform only one search per unique topic unless additional videos are explicitly required.
-        - Do not use this tool for factual research when reliable textual sources are more appropriate. Use it only when video references are requested or would significantly improve the response.
-        """
-        serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
-        google_image_results = serpapi_client.search({
-            "engine": "youtube",
-            "search_query": f"{query}"
-        })
-        results=google_image_results.as_dict()["video_results"][:12]
-        video_details=[{
-            "number": video["position_on_page"],
-            "video_title": video["title"],
-            "video_link" : video["link"],
-            "channel_name": video["channel"]["name"],
-            "thumbnail": video["thumbnail"]["static"]
-        } for video in results]
-        return video_details
-    
 def get_all_tools(session_id: str) -> list:
     return [
         make_rag_search_tool(session_id),
         web_search,
-        wikipedia_search,
         calculator,
         get_current_datetime,
         make_summarize_tool(session_id),
-        search_papers,
-        weather_search,
         search_hacker_news,
-        scrape_web,
-        search_images,
-        search_youtube,
     ]

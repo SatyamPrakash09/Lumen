@@ -5,16 +5,13 @@ info:
 
 http:
   method: POST
-  url: "{{base_url}}/sessions/726a5165-7008-4b8f-8249-6ef75be31239/agent/stream"
+  url: "{{base_url}}/sessions/6f8c7023-a1e4-41bb-bef2-a63addeaeac9/agent/stream"
   body:
     type: json
-    data: "{\r
-
-      \    \"query\":\"what is ai\"\r
-
-      \    \r
-
-      }"
+    data: |-
+      {
+        "query": "search hacker news for tech job security"
+      }
   auth: inherit
 
 settings:
