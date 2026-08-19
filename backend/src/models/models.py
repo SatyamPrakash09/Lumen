@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Text,
     ForeignKey,
+    JSON,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -172,6 +173,27 @@ class Messages(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC)
     )
+
+    # JSON blob storing citations, sources, and tools_used for AI messages
+    citations_data = Column(JSON, nullable=True)
+
+    @property
+    def citations(self):
+        if self.citations_data:
+            return self.citations_data.get("citations", [])
+        return []
+
+    @property
+    def sources(self):
+        if self.citations_data:
+            return self.citations_data.get("sources", [])
+        return []
+
+    @property
+    def tools_used(self):
+        if self.citations_data:
+            return self.citations_data.get("tools_used", [])
+        return []
 
     # Relationships
 

@@ -106,6 +106,13 @@ _WIKI_PATTERN = re.compile(
     r"@@\n(.*?)\n@@END_CITE@@",
     re.DOTALL,
 )
+_HACKERNEWS_PATTERN = re.compile(
+    r"@@CITE_HACKERNEWS\|"
+    r"title=([^|@]+)\|"
+    r"url=([^@]+)"
+    r"@@\n(.*?)\n@@END_CITE@@",
+    re.DOTALL,
+)
 
 
 def _to_string(content) -> str:
@@ -154,6 +161,16 @@ def _parse_citations(tool_name: str, content: str) -> list[dict]:
         for m in _WIKI_PATTERN.finditer(content):
             citations.append({
                 "type": "wikipedia",
+                "title": m.group(1).strip(),
+                "snippet": m.group(3).strip()[:300],
+                "page": None,
+                "chunk_index": None,
+                "url": m.group(2).strip(),
+            })
+    elif tool_name == "search_hacker_news":
+        for m in _HACKERNEWS_PATTERN.finditer(content):
+            citations.append({
+                "type": "Hackernews",
                 "title": m.group(1).strip(),
                 "snippet": m.group(3).strip()[:300],
                 "page": None,
@@ -281,6 +298,7 @@ async def run_agent_stream(
         max_tokens=2048,
         api_key=settings.GOOGLE_API_KEY,
     )
+
 
     agent = create_deep_agent(
         model=llm,

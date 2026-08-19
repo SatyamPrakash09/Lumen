@@ -116,6 +116,9 @@ class MessageResponseSchema(BaseSchema):
     session_id: str
     sender: str
     content: str
+    citations: Optional[list] = None
+    sources: Optional[list[str]] = None
+    tools_used: Optional[list[str]] = None
     timestamp: datetime
 
     class Config:

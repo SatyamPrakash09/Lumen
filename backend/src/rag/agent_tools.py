@@ -107,16 +107,23 @@ def web_search(query: str, max_results: int = 5) -> str:
             ddgs_results = list(ddgs.text(query, max_results=max_results))
 
         serpapi_client = serpapi.Client(api_key= settings.SERP_API_KEY)
-        google_results = serpapi_client.search({
+        google_raw = serpapi_client.search({
             "engine": "google",
             "q": f"{query}"
         })
-        results = ddgs_results.append(google_results)
-        if not results:
+        # Normalize Google organic results to match DuckDuckGo format
+        for gr in google_raw.get("organic_results", []):
+            ddgs_results.append({
+                "title": gr.get("title", "No title"),
+                "href": gr.get("link", ""),
+                "body": gr.get("snippet", ""),
+            })
+
+        if not ddgs_results:
             return "No web search results found."
 
         parts = []
-        for i, r in enumerate(results, 1):
+        for i, r in enumerate(ddgs_results, 1):
             title = r.get("title", "No title").replace("|", "-")[:120].replace("\n", " ")
             url = r.get("href", "")
             header = f"@@CITE_WEB|index={i}|title={title}|url={url}@@"
@@ -547,8 +554,20 @@ def search_hacker_news(
         response.raise_for_status()
 
         data = response.json()
+        hits = data.get("hits", [])
 
-        return data.get("hits", [])
+        if not hits:
+            return "No Hacker News results found."
+
+        parts = []
+        for hit in hits:
+            title = (hit.get("title") or "Untitled").replace("|", "-")[:120]
+            hn_url = hit.get("url") or f"https://news.ycombinator.com/item?id={hit.get('objectID', '')}"
+            body = hit.get("story_text") or hit.get("comment_text") or ""
+            header = f"@@CITE_HACKERNEWS|title={title}|url={hn_url}@@"
+            parts.append(f"{header}\n{body[:500]}\n@@END_CITE@@")
+
+        return "\n\n".join(parts)
 
     except requests.RequestException as e:
         return {"error": f"Request failed: {str(e)}"}

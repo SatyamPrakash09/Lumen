@@ -75,7 +75,16 @@ async def agent_chat(
 
     # ── 4. Persist messages ────────────────────────────────────────────────
     user_msg = Messages(session_id=session_id, sender="user", content=query)
-    ai_msg = Messages(session_id=session_id, sender="ai", content=result["answer"])
+    ai_msg = Messages(
+        session_id=session_id,
+        sender="ai",
+        content=result["answer"],
+        citations_data={
+            "citations": result.get("citations", []),
+            "sources": result.get("sources", []),
+            "tools_used": result.get("tools_used", []),
+        },
+    )
     db.add(user_msg)
     db.add(ai_msg)
     await db.commit()
@@ -130,6 +139,9 @@ async def agent_chat_stream(
 
     # 2. Stream agent execution
     answer = ""
+    final_citations = []
+    final_sources = []
+    final_tools = []
     try:
         async for event in run_agent_stream(
             session_id=session_id,
@@ -139,6 +151,10 @@ async def agent_chat_stream(
         ):
             if event["type"] == "token":
                 answer += event["content"]
+            elif event["type"] == "complete":
+                final_citations = event.get("citations", [])
+                final_sources = event.get("sources", [])
+                final_tools = event.get("tools_used", [])
             yield json.dumps(event) + "\n"
     except Exception as e:
         logger.error(f"[AgentChatStream] Error streaming response: {e}", exc_info=True)
@@ -153,7 +169,12 @@ async def agent_chat_stream(
         ai_msg = Messages(
             session_id=session_id,
             sender="ai",
-            content=answer or "I was unable to generate a response."
+            content=answer or "I was unable to generate a response.",
+            citations_data={
+                "citations": final_citations,
+                "sources": final_sources,
+                "tools_used": final_tools,
+            },
         )
         db.add(ai_msg)
         await db.commit()
